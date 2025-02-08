@@ -1,0 +1,34 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+
+import { auth } from "firebase-admin";
+import { DecodedIdToken } from "firebase-admin/auth";
+
+// Extend Express Request type to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: DecodedIdToken;
+      userRecord?: User;
+    }
+  }
+}
+
+import express from "express";
+import bodyParser from "body-parser";
+import sequelize from "./config/database";
+import router from "./routes";
+import { User } from "./models/user";
+
+const app = express();
+
+app.use(bodyParser.json());
+
+app.listen(7005, async () => {
+  await sequelize.sync();
+  console.log("Server is running on port 7005");
+});
+
+const basePath = (process.env.BASE_PATH || "") + "/api";
+console.log("basePath", basePath);
+app.use(basePath, router);
