@@ -12,7 +12,6 @@ const router = Router();
 
 router.post("/photo", async (req: Request, res: Response) => {
   try {
-    await sequelize.sync();
     const { files, fields } = await parseForm(req);
     const type = String(fields.type);
     const key = randomString();

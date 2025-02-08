@@ -27,7 +27,6 @@ router.post(
     }
 
     try {
-      await sequelize.sync();
       const { files, fields } = await parseForm(req);
       const type = String(fields.type);
       const key = randomString();

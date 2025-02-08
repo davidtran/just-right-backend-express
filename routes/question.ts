@@ -8,7 +8,6 @@ import sequelize from "../config/database";
 const router = Router();
 
 router.post("/question", async (req: Request, res: Response) => {
-  await sequelize.sync();
   const { question } = req.body;
 
   const questions = await parseQuestions(question);

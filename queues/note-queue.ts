@@ -36,7 +36,6 @@ const noteQueue = new Queue("note-queue", {
 });
 
 noteQueue.on("ready", () => {
-  sequelize.sync();
   console.log("Note queue is ready");
 });
 
