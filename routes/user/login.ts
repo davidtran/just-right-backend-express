@@ -14,22 +14,29 @@ router.post(
   "/users/login",
   authenticateUser,
   async (req: Request, res: Response) => {
+    console.log("login");
     const { user, userRecord } = req;
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
+    try {
+      if (!userRecord) {
+        const newUser = await User.create({
+          uid: user.uid,
+          email: user.email,
+          name: user.name || generateRandomName(),
+        });
+        await copySampleData(newUser);
+      }
 
-    if (!userRecord) {
-      const newUser = await User.create({
-        uid: user.uid,
-        email: user.email,
-        name: user.name || generateRandomName(),
+      return res.status(200).send({
+        success: true,
       });
-      await copySampleData(newUser);
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send({});
     }
-
-    return res.status(200).send();
   }
 );
 

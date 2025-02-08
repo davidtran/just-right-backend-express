@@ -38,7 +38,7 @@ const sequelize = new Sequelize({
       rejectUnauthorized: false, // This line will fix new error
     },
   },
-  logging: false,
+  logging: true,
   pool: {
     max: 5,
     min: 0,

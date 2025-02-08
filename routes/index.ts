@@ -1,5 +1,5 @@
 import { Router } from "express";
-
+import hello from "./hello";
 import question from "./question";
 import photo from "./photo";
 import query from "./query";
@@ -16,6 +16,7 @@ import note from "./note";
 import solve from "./solve";
 const router = Router();
 
+router.use(hello);
 router.use(question);
 router.use(getUser);
 router.use(updateUser);
