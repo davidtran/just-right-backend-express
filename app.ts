@@ -29,6 +29,4 @@ app.listen(7005, async () => {
   console.log("Server is running on port 7005");
 });
 
-const basePath = (process.env.BASE_PATH || "") + "/api";
-console.log("basePath", basePath);
-app.use(basePath, router);
+app.use("/api", router);
