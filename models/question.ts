@@ -32,6 +32,9 @@ export class Question extends Model {
   @Column
   math!: boolean;
 
+  @Column
+  language!: string;
+
   @Column({
     type: DataType.TEXT,
   })

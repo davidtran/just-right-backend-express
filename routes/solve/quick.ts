@@ -5,7 +5,11 @@ import openai from "../../config/openai";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Question } from "../../models/question";
 import deepseek from "../../config/deepseek";
-import { convertImageToText, quickSolve } from "../../utils/solve";
+import {
+  convertImageToText,
+  convertImageToTextWithGemini,
+  quickSolve,
+} from "../../utils/solve";
 
 const router = Router();
 
@@ -29,7 +33,9 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
     }
 
     if (question.type === "photo") {
-      const exerciseContent = await convertImageToText(question.content);
+      const exerciseContent = await convertImageToTextWithGemini(
+        question.content
+      );
       question.question = exerciseContent.content;
       question.math = exerciseContent.is_math_exercise;
     }

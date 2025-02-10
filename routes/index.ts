@@ -14,6 +14,8 @@ import audio from "./audio";
 import upload from "./upload";
 import note from "./note";
 import solve from "./solve";
+import predictLanguage from "./predict-language";
+
 const router = Router();
 
 router.use(hello);
@@ -31,4 +33,6 @@ router.use("/audio", audio);
 router.use("/upload", upload);
 router.use("/note", note);
 router.use("/solve", solve);
+router.use(predictLanguage);
+
 export default router;

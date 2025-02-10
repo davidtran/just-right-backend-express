@@ -1,8 +1,5 @@
 import OpenAI from "openai";
-import {
-  ChatCompletionCreateParams,
-  ChatCompletionMessageParam,
-} from "openai/resources";
+import { ChatCompletionMessageParam } from "openai/resources";
 import { resizeAndConvertImageToBase64 } from "./image";
 import { User } from "../models/user";
 import { Question } from "../models/question";
@@ -119,7 +116,7 @@ Text:
 ${input}
 
 Return nothing if there is no question in the text.
-Your response is a JSON with 2 fields: parsed_content and is_math`;
+Your response is a JSON with 2 fields: parsed_content and is_math (boolean)`;
   return chatComplete({
     messages: [
       {
@@ -128,6 +125,7 @@ Your response is a JSON with 2 fields: parsed_content and is_math`;
       },
     ],
     jsonMode: true,
+    modelName: "gpt-4o-mini",
   });
 }
 

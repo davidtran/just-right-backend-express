@@ -35,11 +35,11 @@ router.post(
         const content = Array.isArray(fields.content)
           ? fields.content[0]
           : fields.content;
-        data = await handleTextUpload(content as string, key, userRecord.id);
+        data = await handleTextUpload(content as string, key, userRecord);
       } else if (type === "photo") {
         const file = Array.isArray(files.file) ? files.file[0] : files.file;
         if (!file) throw new Error("No file uploaded");
-        data = await handleImageUpload(file.filepath, key, userRecord.id);
+        data = await handleImageUpload(file.filepath, key, userRecord);
       } else {
         throw new Error("Invalid data type");
       }
@@ -99,8 +99,13 @@ async function canUploadQuestion(userRecord: User) {
   }
 }
 
-async function handleTextUpload(content: string, key: string, userId?: string) {
+async function handleTextUpload(
+  content: string,
+  key: string,
+  userRecord: User
+) {
   const questionInfo = await readText(content);
+  console.log(questionInfo);
   if (!questionInfo || !questionInfo.parsed_content.trim().length) {
     throw new Error(RESPONSE_MESSAGES.INVALID_QUESTION);
   }
@@ -113,7 +118,7 @@ async function handleTextUpload(content: string, key: string, userId?: string) {
   const question = await Question.create({
     ...data,
     type: "text",
-    user_id: userId,
+    user_id: userRecord.id,
   });
   return { id: question.id, content: question.content };
 }
@@ -121,7 +126,7 @@ async function handleTextUpload(content: string, key: string, userId?: string) {
 async function handleImageUpload(
   filepath: string,
   key: string,
-  userId?: string
+  userRecord: User
 ) {
   const photoContent = await resizeAndConvertImageToBase64(filepath, 512);
   if (!photoContent) {
@@ -136,7 +141,7 @@ async function handleImageUpload(
   const question = await Question.create({
     ...data,
     type: "photo",
-    user_id: userId,
+    user_id: userRecord.id,
   });
   return { id: question.id, content: question.content };
 }

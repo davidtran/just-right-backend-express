@@ -4,6 +4,8 @@ import FormData from "form-data";
 import { readFile } from "fs/promises";
 import openai from "../config/openai";
 import { languages } from "../constants/languages";
+import groq, { GROQ_MODEL } from "../config/groq";
+import fs from "fs";
 
 interface ITranscriptAudioProps {
   file: string;
@@ -62,12 +64,23 @@ export const translateText = async (text: string, language: string) => {
 };
 
 export const getLanguageName = (code: string) => {
-  const languageName = languages[code].name;
-  if (!languageName) {
-    return code;
+  const language = languages[code];
+  if (!language) {
+    return "English";
   }
-  return languageName;
+  return language.name;
 };
+
+export async function groqTranscription(file: string) {
+  const transcription = await groq.audio.transcriptions.create({
+    file: fs.createReadStream(file),
+    model: GROQ_MODEL.WHISPER_LARGE_V3_TURBO,
+    response_format: "json",
+    prompt: "Fix any spelling mistakes in the transcription",
+    temperature: 0.0,
+  });
+  return transcription.text;
+}
 
 export async function transcribeAudioWithCloudflare({
   file,

@@ -6,6 +6,7 @@ import FeynmanUsage from "../../models/feynman-usage";
 import { detectLanguage } from "../../utils/document-processor";
 import { languages } from "../../constants/languages";
 import { trimQuotes } from "../../utils/general";
+import { gemini20Flash } from "../../config/gemini";
 
 const router = Router();
 
@@ -42,26 +43,29 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
       language = detectedLanguage.lang;
     }
     const languageName = languages[language]
-      ? languages[language].nativeName
+      ? languages[language].name
       : "English";
 
     if (languageName === "English") {
       return res.status(200).json({
-        message: `Hey, please explain ${topic} to me like I'm 5!`,
+        message: `Hey, please explain ${topic} to me like I'm a 5 years old!`,
       });
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await gemini20Flash.generateContent({
+      contents: [
         {
-          role: "system",
-          content: `Without explanation, rewrite "Hey, please explain ${topic} to me like I'm 5!" to ${languageName}.`,
+          parts: [
+            {
+              text: `Without explanation, friendly rewrite "Hey, please explain ${topic} to me" to ${languageName}.`,
+            },
+          ],
+          role: "user",
         },
       ],
     });
 
-    const result = response.choices[0].message.content;
+    const result = response.response.text();
     res
       .status(200)
       .json({ message: trimQuotes(result || ""), language: languageName });

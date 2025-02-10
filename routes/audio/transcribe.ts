@@ -6,7 +6,7 @@ import { randomString } from "../../utils/general";
 
 import { authenticateUser } from "../../middlewares/auth";
 import { logError } from "../../config/firebaseAdmin";
-import { transcribeWithFirework } from "../../utils/transcription";
+import { groqTranscription } from "../../utils/transcription";
 const router = Router();
 
 router.post(
@@ -21,9 +21,7 @@ router.post(
         return res.status(400).json({ error: "No audio file provided" });
       }
       console.time("TranscribeAudio");
-      const { text } = await transcribeWithFirework({
-        file: file.filepath,
-      });
+      const text = await groqTranscription(file.filepath);
       console.timeEnd("TranscribeAudio");
       return res.status(200).json(text);
     } catch (error) {

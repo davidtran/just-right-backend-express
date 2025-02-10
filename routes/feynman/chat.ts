@@ -6,6 +6,11 @@ import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import FeynmanUsage from "../../models/feynman-usage";
 import deepseek, { DEEPSEEK_MODEL } from "../../config/deepseek";
 import fireworks, { FireworksModels } from "../../config/fireworks";
+import {
+  cleanAndParseGeminiResponse,
+  gemini20Flash,
+} from "../../config/gemini";
+import { SchemaType } from "@google/generative-ai";
 
 const router = Router();
 
@@ -42,7 +47,7 @@ For each message from me, you must:
 - make sure that your question always relate to main topic ${topic}.
 - Try to not repeat same question.
 
-Only ask short question for each interaction. Max 30 words. 
+Always ask a short question for after each interaction. Max 30 words. 
 
 End the conversation when the topic is clarify for you or when you have asked 7 questions. Speak casually. Use ${
       language || "English"
@@ -53,27 +58,49 @@ Your response is a JSON of object:
 - is_done (conversation done)`;
 
     const openaiMessages = [
-      { role: "user", content: FEYNMAN_PROMPT },
+      { role: "developer", content: FEYNMAN_PROMPT },
       ...messages,
     ];
 
     openaiMessages.push({ role: "user", content: new_message });
 
-    const completion = await openai.chat.completions.create({
-      model: "o3-mini",
-      messages: openaiMessages as ChatCompletionMessageParam[],
-      stream: false,
-      reasoning_effort: "medium",
-      response_format: { type: "json_object" },
+    const completion = await gemini20Flash.generateContent({
+      contents: messages.map((message) => ({
+        parts: [{ text: message.content }],
+        role: message.role === "user" ? "user" : "model",
+      })),
+      systemInstruction: FEYNMAN_PROMPT,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          description: "Chat response",
+          type: SchemaType.OBJECT,
+          properties: {
+            message: {
+              type: SchemaType.STRING,
+              description: "Chat message",
+              nullable: false,
+            },
+            is_done: {
+              type: SchemaType.BOOLEAN,
+              description: "Conversation done",
+              nullable: false,
+            },
+          },
+          required: ["message", "is_done"],
+        },
+      },
     });
 
-    const content = completion.choices[0]?.message?.content;
+    const content = completion.response.text();
+
+    console.log(content);
 
     if (!content) {
       throw new Error("No explanation generated");
     }
 
-    const result = JSON.parse(content);
+    const result = cleanAndParseGeminiResponse(content);
 
     return res.status(200).json(result);
   } catch (error) {
@@ -93,19 +120,5 @@ Your response is a JSON of object:
     });
   }
 });
-
-async function evaluateAnswer(question: string, answer: string, topic: string) {
-  const completion = await fireworks.chat.completions.create({
-    model: FireworksModels.LLAMA_V3P3_70B_INSTRUCT,
-    messages: [
-      {
-        role: "system",
-        content: `Evaluate the answer "${answer}" and determine if it is good answer to the question "${question}" for the topic "${topic}". If it good answer, return "true", otherwise ask a question to challenge that answer.`,
-      },
-    ],
-  });
-
-  return completion.choices[0].message.content;
-}
 
 export default router;

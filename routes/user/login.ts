@@ -17,6 +17,7 @@ router.post(
   async (req: Request, res: Response) => {
     console.log("login");
     const { user, userRecord } = req;
+    const { locale } = req.body;
 
     if (!user) {
       return res.status(401).json({ message: "Unauthorized: Invalid token" });
@@ -27,6 +28,7 @@ router.post(
           uid: user.uid,
           email: user.email,
           name: user.name || generateRandomName(),
+          locale: locale || "en",
         });
         await copySampleData(newUser);
       }
