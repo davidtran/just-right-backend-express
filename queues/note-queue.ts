@@ -5,10 +5,9 @@ import Queue from "bee-queue";
 import { Note } from "../models/note";
 import { preprocessAudioNote } from "./note-handlers/audio-handler";
 import { logError } from "../config/firebaseAdmin";
-import sequelize from "../config/database";
 import { preprocessYoutubeNote } from "./note-handlers/youtube-handler";
 import { preprocessImageNote } from "./note-handlers/image-handler";
-import { getLanguageName, translateText } from "../utils/transcription";
+import { getLanguageName } from "../utils/transcription";
 import { preprocessPdfNote } from "./note-handlers/pdf-handler";
 import { preprocessTextNote } from "./note-handlers/text-handler";
 import {
@@ -16,10 +15,9 @@ import {
   extractNoteTitle,
   generateBookSummary,
   generateNoteChunks,
-  generateNoteTitle,
+  generateNoteSummaryWithGemini,
   translateWithGemini,
 } from "../utils/note/note-processing";
-import { generateNoteSummary } from "../utils/note/note-processing";
 import { preprocessWebsiteNote } from "./note-handlers/website-handler";
 import NoteChunk from "../models/note-chunk";
 import NoteQuestion from "../models/note-question";
@@ -104,8 +102,6 @@ async function preprocessNote(note: Note, type: string, job: any) {
 }
 
 async function postprocessNote(note: Note, type: string, files: string[]) {
-  console.log("postprocessNote", note.content);
-
   let summary = await getNoteSummary(note, type);
   if (summary.startsWith("```markdown")) {
     summary = summary.slice(9).trim();
@@ -114,13 +110,10 @@ async function postprocessNote(note: Note, type: string, files: string[]) {
     summary = summary.slice(0, -3).trim();
   }
 
-  //const embedding = result[1];
-
-  console.log(summary);
-
-  const title = extractNoteTitle(summary);
-
-  note.title = title || "";
+  if (!note.title) {
+    const title = extractNoteTitle(summary);
+    note.title = title || "";
+  }
   note.summary = summary || "";
   note.original_summary = summary || "";
   //note.embedding = embedding;
@@ -182,7 +175,7 @@ function getNoteSummary(note: Note, type: string) {
       return generateBookSummary(note.content);
     }
     default: {
-      return generateNoteSummary(note.content);
+      return generateNoteSummaryWithGemini(note.content);
     }
   }
 }

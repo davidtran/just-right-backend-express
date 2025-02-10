@@ -23,10 +23,6 @@ export const preprocessAudioNote = async (note: Note, audioPath: string) => {
 
   note.source_language = language;
   note.timestamps = extractTimestamps(transcript.segments);
-
-  const summary = await generateNoteSummary(text);
-
-  note.summary = summary || "";
   note.content = text || "";
 
   const url = await uploadObject(audioPath);

@@ -9,7 +9,6 @@ import {
   gemini15Flash,
 } from "../../config/gemini";
 import { getLanguageName } from "../transcription";
-import { shuffle, trimEnd, trimStart } from "lodash";
 
 export async function generateQuiz(note: Note): Promise<IQuizQuestion[]> {
   const questions = await collectQuestionsFromSummary(note);
@@ -74,7 +73,7 @@ Example output:
 export async function generateQuizWithGemini(note: Note) {
   console.time("generateQuizWithGemini");
   const prompt = `Without explaining, generate quiz questions from this content: 
-  ${note.original_summary} 
+  ${note.content} 
 ------------------------------     
 Your response is a JSON object with a key "questions" and a value is a JSON array. (${
     note.target_language
@@ -107,7 +106,7 @@ Example output:
       },
     ],
     generationConfig: {
-      temperature: 0.1,
+      temperature: 0.2,
     },
   });
   console.timeEnd("generateQuizWithGemini");
@@ -115,12 +114,6 @@ Example output:
   let questionsContent = cleanAndParseGeminiResponse(response.response.text());
 
   return questionsContent.questions;
-  // if (note.target_language && note.source_language !== note.target_language) {
-  //   const translatedQuestions = await translateQuizArray(note, questions);
-  //   return translatedQuestions;
-  // }
-
-  // return questions;
 }
 
 async function translateQuizArray(note: Note, quizzes: any[]) {
@@ -145,7 +138,7 @@ async function translateQuizArray(note: Note, quizzes: any[]) {
       },
     ],
     generationConfig: {
-      temperature: 0.1,
+      temperature: 0.2,
     },
   });
 

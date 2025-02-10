@@ -39,3 +39,9 @@ export function trimQuotes(text: string): string {
   // Remove quotes only from start and end of string
   return text.replace(/^["'`]|["'`]$/g, "").trim();
 }
+
+export function extractYoutubeId(url: string) {
+  const urlObj = new URL(url);
+  const id = urlObj.searchParams.get("v");
+  return id;
+}

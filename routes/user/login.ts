@@ -9,6 +9,7 @@ import { identity, pickBy } from "lodash";
 import NoteChunk from "../../models/note-chunk";
 import { Quiz } from "../../models/quiz";
 import { Flashcard } from "../../models/flashcard";
+import NoteQuestion from "../../models/note-question";
 
 router.post(
   "/users/login",
@@ -57,7 +58,7 @@ async function copySampleData(userRecord: User) {
   await note.save();
 
   await Promise.all(
-    sampleData.note.chunks.map((chunk) => {
+    sampleData.chunks.map((chunk) => {
       return new NoteChunk({
         ...pickBy(
           {
@@ -94,6 +95,23 @@ async function copySampleData(userRecord: User) {
         ...pickBy(
           {
             ...flashcard,
+            id: undefined,
+            note_id: note.id,
+          },
+          identity
+        ),
+        user_id: userRecord.id,
+      }).save();
+    })
+  );
+
+  await Promise.all(
+    sampleData.questions.map((question) => {
+      return new NoteQuestion({
+        ...pickBy(
+          {
+            // @ts-ignore
+            ...question,
             id: undefined,
             note_id: note.id,
           },

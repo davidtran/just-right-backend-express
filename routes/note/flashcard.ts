@@ -7,6 +7,7 @@ import openai from "../../config/openai";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Flashcard } from "../../models/flashcard";
 import { gemini15Flash } from "../../config/gemini";
+import NoteQuestion from "../../models/note-question";
 
 interface FlashcardItem {
   question: string;
@@ -68,44 +69,13 @@ router.get(
 );
 
 async function generateFlashcardsFromNote(note: Note) {
-  console.time("generateFlashcardsFromNote");
-  const messages = [
-    {
-      role: "system",
-      content: `You are a flashcard generator. Create flashcards based on the provided content.
-Your response is a JSON object - flashcards:
-Example:
-{
-  "flashcards": [
-    {
-      "question": "The question text",
-      "answer": "The concise answer",
-    }
-  ]
-}`,
-    },
-    {
-      role: "user",
-      content: `Create flashcards from this content:\n\n${note.content}`,
-    },
-  ];
-
-  const completion1 = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: messages as ChatCompletionMessageParam[],
-    temperature: 0.7,
-    max_tokens: 2000,
-    response_format: { type: "json_object" },
+  let questions = await NoteQuestion.findAll({
+    where: { note_id: note.id },
   });
-
-  let content = completion1.choices[0].message.content;
-  console.time("generateFlashcardsFromNote");
-
-  if (!content) {
-    throw new Error("No content returned from OpenAI");
-  }
-
-  let flashcards = JSON.parse(content).flashcards;
+  let flashcards = questions.map((question) => ({
+    question: question.question,
+    answer: question.best_answer,
+  }));
   if (note.target_language && note.target_language !== note.source_language) {
     const translatedFlashcards = await translateFlashcardArray(
       note,
@@ -142,7 +112,7 @@ async function translateFlashcardArray(note: Note, quizzes: any[]) {
             )}
             
             Example output:
-            [{"question": "TikTok không cắt đứt quan hệ với ByteDance sẽ phải đối mặt với những hậu quả gì?", "answers": ["Phạt tiền đối với các cửa hàng ứng dụng và nhà cung cấp Internet", "Mất dữ liệu người dùng", "Bị cấm khỏi các cửa hàng ứng dụng", "Tất cả các điều trên"], "correct_answer": 3}]`,
+            [{"question": string, "answer": string}]`,
           },
         ],
         role: "user",
@@ -167,29 +137,6 @@ async function translateFlashcardArray(note: Note, quizzes: any[]) {
   } catch (error) {
     throw new Error("Failed to parse Gemini response as JSON");
   }
-}
-
-async function translateFlashcard(note: Note, flashcard: any) {
-  const response2 = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "user",
-        content: `Translate this JSON object to ${
-          note.target_language
-        } language: ${JSON.stringify(flashcard)}`,
-      },
-    ] as ChatCompletionMessageParam[],
-    response_format: { type: "json_object" },
-  });
-
-  const content2 = response2.choices[0].message.content;
-
-  if (!content2) {
-    throw new Error("No content returned from OpenAI");
-  }
-
-  return JSON.parse(content2);
 }
 
 export default router;

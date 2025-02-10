@@ -18,7 +18,7 @@ export async function generateNoteSummary(content: string) {
       {
         role: "system",
         content:
-          "Without explanation, summarize the content of the note in a study-note style using Markdown. Your response must include bullets, tables (if applicable), and concise sections.",
+          "Without explanation, summarize the content of the note in a study-note style using Markdown. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections.",
       },
       {
         role: "user",
@@ -36,6 +36,14 @@ export async function generateNoteSummary(content: string) {
   return response;
 }
 
+export async function generateNoteSummaryWithGemini(content: string) {
+  const summary = await gemini20Flash.generateContent([
+    `Without explanation, summarize the content of the provided text in a study-note style using Markdown. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections.
+Text: ${content}`,
+  ]);
+  return summary.response.text();
+}
+
 export async function generateBookSummary(content: string) {
   console.time("generateBookSummary");
   const summary = await openai.chat.completions.create({
@@ -44,7 +52,7 @@ export async function generateBookSummary(content: string) {
       {
         role: "system",
         content:
-          "Without explanation, summarize the content of the book in a study-note style using Markdown. Your summary should be detailed and comprehensive for every chapter of the book, and must include bullets, tables (if applicable), and concise sections.",
+          "Without explanation, summarize the content of the book in a study-note style using Markdown. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections.",
       },
       {
         role: "user",

@@ -17,6 +17,9 @@ router.get("/list", authenticateUser, async (req: Request, res: Response) => {
     const whereClause: any = {
       user_id: userRecord.id,
       is_deleted: false,
+      processing_status: {
+        [Op.not]: "failed",
+      },
     };
     if (q) {
       whereClause.title = {

@@ -7,7 +7,8 @@
     "start": "ts-node app.ts",
     "dev": "nodemon app.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-chunk": "ts-node scripts/test-chunk.ts"
+    "test-chunk": "ts-node scripts/test-chunk.ts",
+    "extract-note": "ts-node scripts/extract-note.ts"
   },
   "author": "",
   "license": "ISC",

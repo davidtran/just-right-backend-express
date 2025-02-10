@@ -24,12 +24,12 @@ export class NoteQuestion extends Model {
   note_id!: string;
 
   @Column({
-    type: DataType.STRING(200),
+    type: DataType.STRING(500),
   })
   question!: string;
 
   @Column({
-    type: DataType.STRING(200),
+    type: DataType.STRING(1000),
   })
   best_answer!: string;
 }
