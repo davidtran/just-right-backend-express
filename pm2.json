@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "ProfessorAI API",
-      "script": "./node_modules/.bin/next",
+      "script": "npm",
       "args": "start -p 6500",
       "instances": "1",
       "exec_mode": "cluster"
