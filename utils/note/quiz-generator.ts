@@ -7,8 +7,10 @@ import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import {
   cleanAndParseGeminiResponse,
   gemini15Flash,
+  gemini20Flash,
 } from "../../config/gemini";
 import { getLanguageName } from "../transcription";
+import NoteQuestion from "../../models/note-question";
 
 export async function generateQuiz(note: Note): Promise<IQuizQuestion[]> {
   const questions = await collectQuestionsFromSummary(note);
@@ -72,8 +74,14 @@ Example output:
 
 export async function generateQuizWithGemini(note: Note) {
   console.time("generateQuizWithGemini");
-  const prompt = `Without explaining, generate quiz questions from this content: 
-  ${note.content} 
+  const questions = await NoteQuestion.findAll({
+    where: { note_id: note.id },
+  });
+  const prompt = `Without explaining, generate quiz from these questions and answers: 
+  ${JSON.stringify(questions)}
+
+Reference content:
+${note.content}
 ------------------------------     
 Your response is a JSON object with a key "questions" and a value is a JSON array. (${
     note.target_language
@@ -94,7 +102,7 @@ Example output:
 }]
 }`;
   console.log(prompt);
-  const response = await gemini15Flash.generateContent({
+  const response = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [

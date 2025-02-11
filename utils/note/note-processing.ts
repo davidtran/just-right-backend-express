@@ -9,6 +9,7 @@ import {
   gemini20Flash,
 } from "../../config/gemini";
 import { Note } from "../../models/note";
+import { SchemaType } from "@google/generative-ai";
 
 export async function generateNoteSummary(content: string) {
   console.time("generateNoteSummary");
@@ -38,7 +39,7 @@ export async function generateNoteSummary(content: string) {
 
 export async function generateNoteSummaryWithGemini(content: string) {
   const summary = await gemini20Flash.generateContent([
-    `Without explanation, summarize the content of the provided text in a study-note style using Markdown. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections.
+    `Without explanation, summarize the content of the provided text in a study-note style using Markdown. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections. Summary content must be in same language as input text.
 Text: ${content}`,
   ]);
   return summary.response.text();
@@ -46,30 +47,11 @@ Text: ${content}`,
 
 export async function generateBookSummary(content: string) {
   console.time("generateBookSummary");
-  const summary = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "Without explanation, summarize the content of the book in a study-note style using Markdown. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections.",
-      },
-      {
-        role: "user",
-        content: content,
-      },
-    ],
-  });
-
-  console.timeEnd("generateBookSummary");
-
-  const response = summary.choices[0].message.content;
-
-  if (!response) {
-    throw new Error("Failed to generate summary");
-  }
-
-  return response;
+  const summary = await gemini20Flash.generateContent([
+    `Without explanation, summarize the content of the book in a study-note style using Markdown. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections. Summary content must be in same language as input text.
+Text: ${content}`,
+  ]);
+  return summary.response.text();
 }
 
 export function extractNoteTitle(content: string) {
@@ -187,6 +169,8 @@ Your response is a JSON object, use this format:
     "best_answer": string - must be descriptive,    
   }]
 }
+
+Question and answer must be in same language as input content.
 `;
   console.time("extractNoteKeyQuestions");
   const result = await gemini20Flash.generateContent({
@@ -198,6 +182,26 @@ Your response is a JSON object, use this format:
     ],
     generationConfig: {
       temperature: 0.1,
+      responseSchema: {
+        description: "Key questions and answers",
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            question: {
+              type: SchemaType.STRING,
+              description: "Question",
+              nullable: false,
+            },
+            best_answer: {
+              type: SchemaType.STRING,
+              description: "Best answer",
+              nullable: false,
+            },
+          },
+          required: ["question", "best_answer"],
+        },
+      },
     },
   });
   const response = result.response.text();

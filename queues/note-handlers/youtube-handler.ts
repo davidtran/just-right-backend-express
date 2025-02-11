@@ -6,7 +6,7 @@ export async function preprocessYoutubeNote(note: Note, youtubeUrl: string) {
   const { title, text, segments } = await transcribeYoutube(youtubeUrl);
   const language = await detectLanguage(text);
 
-  note.source_language = language.lang;
+  note.source_language = language;
   note.timestamps = segments;
   note.title = title;
   note.content = text || "";

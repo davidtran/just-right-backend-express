@@ -40,7 +40,7 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
     const detectedLanguage = await detectLanguage(topic);
     let language = "en";
     if (detectedLanguage) {
-      language = detectedLanguage.lang;
+      language = detectedLanguage;
     }
     const languageName = languages[language]
       ? languages[language].name

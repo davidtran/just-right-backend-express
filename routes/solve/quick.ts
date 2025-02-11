@@ -38,6 +38,7 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
       );
       question.question = exerciseContent.content;
       question.math = exerciseContent.is_math_exercise;
+      question.direct_answer = exerciseContent.direct_answer;
     }
 
     const solution = await quickSolve(question);
@@ -48,6 +49,7 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
       success: true,
       answer: solution,
       math: question.math,
+      direct_answer: question.direct_answer,
     });
   } catch (error) {
     console.error(error);

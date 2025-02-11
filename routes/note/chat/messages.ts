@@ -3,6 +3,8 @@ import { authenticateUser } from "../../../middlewares/auth";
 import { Note } from "../../../models/note";
 import { NoteMessage } from "../../../models/note-message";
 import { logError } from "../../../config/firebaseAdmin";
+import { translateWithGemini } from "../../../utils/note/note-processing";
+import { getLanguageName } from "../../../utils/transcription";
 
 const router = Router();
 
@@ -37,10 +39,17 @@ router.get(
       });
 
       if (messages.length === 0) {
+        let firstMessage = `Hi! I'm your AI assistant. I can help you analyze and understand this note about "${note.title}". What would you like to know?`;
+        if (note.target_language) {
+          firstMessage = await translateWithGemini(
+            `Hi! I'm your AI assistant. I can help you analyze and understand this note about "${note.title}". What would you like to know?`,
+            getLanguageName(note.target_language)
+          );
+        }
         const defaultMessage = await NoteMessage.create({
           note_id: note.id,
           role: "assistant",
-          content: `Hi! I'm your AI assistant. I can help you analyze and understand this note about "${note.title}". What would you like to know?`,
+          content: firstMessage,
         });
         messages = [defaultMessage];
       }

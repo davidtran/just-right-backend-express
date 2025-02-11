@@ -35,6 +35,9 @@ export class Question extends Model {
   @Column
   language!: string;
 
+  @Column
+  direct_answer!: boolean;
+
   @Column({
     type: DataType.TEXT,
   })

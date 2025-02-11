@@ -7,6 +7,7 @@ import openai from "../../../config/openai";
 import { IChatMessage } from "../../../constants/interfaces";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { NoteMessage } from "../../../models/note-message";
+import { getLanguageName } from "../../../utils/transcription";
 
 const router = Router();
 
@@ -64,7 +65,7 @@ router.post("/send", authenticateUser, async (req: Request, res: Response) => {
           context.length > 0
             ? `Use the following information to answer the user's question: ${context}`
             : ""
-        }. \n\nKeep your response concise and to the point.`,
+        }. \n\nKeep your response concise and to the point, same language as the question.`,
       },
       {
         role: "user",

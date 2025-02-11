@@ -13,7 +13,7 @@ export const preprocessImageNote = async (note: Note, resources: string[]) => {
   );
   const text = textArray.join("\n");
   const language = await detectLanguage(text);
-  note.source_language = language.lang;
+  note.source_language = language;
   note.content = text;
 
   const urls = await Promise.all(

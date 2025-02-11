@@ -9,7 +9,7 @@ export const preprocessPdfNote = async (note: Note, pdfFile: string) => {
   console.log("text", text);
   const sourceLanguage = await detectLanguage(text);
 
-  note.source_language = sourceLanguage.lang;
+  note.source_language = sourceLanguage;
   note.content = text || "";
 
   const url = await uploadObject(pdfFile);

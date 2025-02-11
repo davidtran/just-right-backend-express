@@ -12,11 +12,13 @@ router.put(
       return res.status(401).json({ message: "Unauthorized" });
     }
 
+    console.log(req.body);
+
     // Create an update object with only the fields that exist in the request body
     const updateData: Partial<typeof userRecord> = {};
 
     // List of allowed fields to update
-    const allowedFields = ["is_pro"] as const;
+    const allowedFields = ["is_pro", "locale"] as const;
 
     // Only include fields that exist in the request body
     allowedFields.forEach((field) => {

@@ -3,11 +3,15 @@ import { readFile } from "fs/promises";
 
 const LanguageDetection = require("@smodin/fast-text-language-detection");
 
-export async function detectLanguage(text: string) {
+export async function detectLanguage(text: string): Promise<string> {
   const detector = new LanguageDetection();
   const result = await detector.predict(text);
-  if (result.length > 0) {
-    return result[0];
+  if (
+    result.length > 0 &&
+    result[0].prob >= 0.5 &&
+    result[0].isReliableLanguage
+  ) {
+    return result[0].lang;
   }
   return "en";
 }

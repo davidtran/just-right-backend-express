@@ -1,6 +1,10 @@
 import openai from "../config/openai";
 import { Question } from "../models/question";
-import { cleanAndParseGeminiResponse, gemini15Flash } from "../config/gemini";
+import {
+  cleanAndParseGeminiResponse,
+  gemini15Flash,
+  gemini20Flash,
+} from "../config/gemini";
 import groq, { GROQ_MODEL } from "../config/groq";
 import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
@@ -41,8 +45,12 @@ export async function convertImageToText(
 
 export async function convertImageToTextWithGemini(
   base64Image: string
-): Promise<{ content: string; is_math_exercise: boolean }> {
-  const res = await gemini15Flash.generateContent({
+): Promise<{
+  content: string;
+  direct_answer: boolean;
+  is_math_exercise: boolean;
+}> {
+  const res = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [
@@ -58,7 +66,7 @@ export async function convertImageToTextWithGemini(
       {
         parts: [
           {
-            text: "Extract the text from the image. Your response is a JSON of 2 fields: content, is_math_exercise, is_empty. Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.",
+            text: "Extract the text from the image. Your response is a JSON of 2 fields: content, is_math_exercise, direct_answer. Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.",
           },
         ],
         role: "user",
@@ -80,13 +88,13 @@ export async function convertImageToTextWithGemini(
             description: "is this a math exercise?",
             nullable: false,
           },
-          is_empty: {
+          direct_answer: {
             type: SchemaType.BOOLEAN,
-            description: "no exercise found?",
+            description: "is this a objective question?",
             nullable: false,
           },
         },
-        required: ["content", "is_math_exercise", "is_empty"],
+        required: ["content", "is_math_exercise", "direct_answer"],
       },
     },
   });
@@ -108,9 +116,9 @@ function getQuickSolveMessages(question: Question) {
     },
     {
       role: "user",
-      content: `Do not explain, just give me a very short result for question(s): ${JSON.stringify(
-        question.question
-      )}.`,
+      content: `Do not explain, give me a short ${
+        question.direct_answer ? "answer" : "result"
+      } for question(s): ${JSON.stringify(question.question)}.`,
     },
   ] as Groq.Chat.ChatCompletionMessageParam[];
 
@@ -126,7 +134,10 @@ export async function quickSolve(question: Question): Promise<string> {
   });
 
   const content = response.choices[0].message.content || "";
-  const translatedContent = await ensureTranslation(question, content);
+  const translatedContent = await ensureQuickSolveTranslation(
+    question,
+    content
+  );
   return translatedContent;
 }
 
@@ -154,31 +165,36 @@ export async function explain(question: Question): Promise<string> {
   return translatedContent;
 }
 
-async function convertToLatex(content: string): Promise<string> {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "Format all mathematical expressions in my text using Katex syntax. Use $...$ for inline math and $$...$$ for display math.",
-      },
-      { role: "user", content: content },
-    ],
-  });
-
-  return response.choices[0].message.content || "";
-}
-
 async function ensureTranslation(question: Question, answer: string) {
-  let prompt = `Here is my question: ${JSON.stringify(
+  let prompt = `Question: ${JSON.stringify(
     question.question
-  )}. My answer: ${answer}. Without explanation, rewrite my answer to the same language as the question.`;
+  )}. Answer: ${answer}. 
+  
+  Your task: Do not explain, rewrite the answer in same language as question`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
   }
 
-  const response = await gemini15Flash.generateContent([{ text: prompt }]);
+  const response = await gemini20Flash.generateContent([{ text: prompt }]);
+  return response.response.text();
+}
+
+async function ensureQuickSolveTranslation(question: Question, answer: string) {
+  let prompt = `Question: ${JSON.stringify(
+    question.question
+  )}. My answer: ${answer}. 
+-----
+Your task: do not explain, rewrite the answer in same language as question.`;
+
+  if (question.direct_answer) {
+    prompt += `The output should contain only answer without any explanation.`;
+  }
+
+  if (question.math) {
+    prompt += `\n${MATH_PROMPT}`;
+  }
+
+  const response = await gemini20Flash.generateContent([{ text: prompt }]);
   return response.response.text();
 }

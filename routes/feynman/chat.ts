@@ -43,7 +43,7 @@ router.post("/chat", authenticateUser, async (req: Request, res: Response) => {
 
 For each message from me, you must:
 - evaluate the answer to make sure it relate to the topic, challenge me if my answer doesn't correct.
-- Identify my knowledge gaps in my answer and ask me to clarify it.
+- Identify my knowledge gaps and ask me to clarify it.
 - make sure that your question always relate to main topic ${topic}.
 - Try to not repeat same question.
 

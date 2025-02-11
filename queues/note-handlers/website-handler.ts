@@ -4,11 +4,9 @@ import { parse } from "node-html-parser";
 import { detectLanguage } from "../../utils/document-processor";
 
 export async function preprocessWebsiteNote(note: Note, websiteUrl: string) {
-  console.log("preprocessWebsiteNote", websiteUrl);
   const text = await fetchWebsiteContent(websiteUrl);
   const language = await detectLanguage(text);
-  console.log(language);
-  note.source_language = language.lang;
+  note.source_language = language;
   note.content = text;
   await note.save();
 }
