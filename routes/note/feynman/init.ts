@@ -12,6 +12,7 @@ import {
   cleanAndParseGeminiResponse,
   gemini15Flash,
 } from "../../../config/gemini";
+import { SchemaType } from "@google/generative-ai";
 
 const router = Router();
 
@@ -40,8 +41,6 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
     }
 
     const sessionData = await buildSessionData(note);
-
-    console.log(sessionData);
 
     // Prepare the Feynman teaching prompt
     let firstQuestion = sessionData[0].question;
@@ -74,11 +73,12 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
 async function buildSessionData(note: Note) {
   const questionList = await NoteQuestion.findAll({
     where: { note_id: note.id },
-    limit: 3,
   });
+
   const rewriteQuestions = await rewriteQuestion(
     questionList.map((question) => question.question)
   );
+
   const questions = questionList.map((question, index) => ({
     question: rewriteQuestions[index],
     best_answer: question.best_answer,
@@ -91,16 +91,29 @@ async function rewriteQuestion(questions: string[]): Promise<string[]> {
     questions
   )}
 Your response is a JSON object, use this format:
-{
-  "questions": ["question 1", "question 2", "question 3"]
-}
+["question 1", "question 2", "question 3"]
+
+Keep output language same as the input language.
+
 `;
   const result = await gemini15Flash.generateContent({
     contents: [{ parts: [{ text: prompt }], role: "user" }],
+    generationConfig: {
+      temperature: 0.4,
+      responseMimeType: "application/json",
+      responseSchema: {
+        description: "Array of questions",
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.STRING,
+          description: "Question",
+        },
+      },
+    },
   });
   const text = result.response.text();
   const json = cleanAndParseGeminiResponse(text);
-  return json.questions;
+  return json;
 }
 
 export default router;

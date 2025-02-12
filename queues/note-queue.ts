@@ -143,8 +143,6 @@ async function postprocessNote(note: Note, type: string, files: string[]) {
         note_id: note.id,
         question: question.question,
         best_answer: question.best_answer,
-        explanation: question.explanation,
-        importance: question.importance,
       })
     )
   );

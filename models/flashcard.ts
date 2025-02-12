@@ -19,10 +19,14 @@ export class Flashcard extends Model {
   })
   id!: string;
 
-  @Column
+  @Column({
+    type: DataType.STRING(1000),
+  })
   front!: string;
 
-  @Column
+  @Column({
+    type: DataType.STRING(1000),
+  })
   back!: string;
 
   @Column({

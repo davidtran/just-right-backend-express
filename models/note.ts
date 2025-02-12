@@ -16,7 +16,7 @@ export class Note extends Model {
   @Column({ type: DataType.UUID, defaultValue: DataType.UUIDV4 })
   id!: string;
 
-  @Column
+  @Column({ type: DataType.STRING(500) })
   title!: string;
 
   @Column({ type: DataType.TEXT })
@@ -39,7 +39,7 @@ export class Note extends Model {
   @Column
   source_type!: string;
 
-  @Column({ type: DataType.ARRAY(DataType.STRING) })
+  @Column({ type: DataType.ARRAY(DataType.STRING(1000)) })
   resource_urls!: string[];
 
   @Default(false)

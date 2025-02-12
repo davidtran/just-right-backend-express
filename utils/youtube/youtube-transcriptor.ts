@@ -1,8 +1,8 @@
 import axios from "axios";
-import { extractYoutubeId } from "../general";
+import { getYouTubeVideoId } from "../general";
 
 export async function transcribeYoutube(youtubeUrl: string) {
-  const id = extractYoutubeId(youtubeUrl);
+  const id = getYouTubeVideoId(youtubeUrl);
   const response = await axios.get(
     `https://youtube-transcriptor.p.rapidapi.com/transcript?video_id=${id}`,
     {

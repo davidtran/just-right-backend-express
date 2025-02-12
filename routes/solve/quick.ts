@@ -1,15 +1,8 @@
 import { Router, Request, Response } from "express";
 import { authenticateUser } from "../../middlewares/auth";
 import { logError } from "../../config/firebaseAdmin";
-import openai from "../../config/openai";
-import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Question } from "../../models/question";
-import deepseek from "../../config/deepseek";
-import {
-  convertImageToText,
-  convertImageToTextWithGemini,
-  quickSolve,
-} from "../../utils/solve";
+import { convertImageToTextWithGemini, quickSolve } from "../../utils/solve";
 
 const router = Router();
 

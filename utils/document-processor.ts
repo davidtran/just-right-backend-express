@@ -1,5 +1,7 @@
+import { gemini15Flash } from "../config/gemini";
 import openai from "../config/openai";
 import { readFile } from "fs/promises";
+import { resizeAndConvertImageToBase64 } from "./image";
 
 const LanguageDetection = require("@smodin/fast-text-language-detection");
 
@@ -17,29 +19,32 @@ export async function detectLanguage(text: string): Promise<string> {
 }
 
 export async function extractTextFromImage(imagePath: string) {
-  const base64Image = await fileToBase64(imagePath);
-  const text = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
+  const base64Image = await resizeAndConvertImageToBase64(imagePath);
+  const text = await gemini15Flash.generateContent({
+    contents: [
       {
-        role: "system",
-        content:
-          "Extract text from the image, convert math equation to mathjax format. Return empty string if there is no text in the image. ",
-      },
-      {
-        role: "user",
-        content: [
+        parts: [
           {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpeg;base64,${base64Image}`,
+            inlineData: {
+              data: base64Image,
+              mimeType: "image/jpeg",
             },
           },
         ],
+        role: "user",
+      },
+      {
+        parts: [
+          {
+            text: "Extract text from the image.",
+          },
+        ],
+        role: "user",
       },
     ],
   });
-  return text.choices[0]?.message?.content || "";
+
+  return text.response.text() || "";
 }
 
 async function fileToBase64(filepath: string): Promise<string> {

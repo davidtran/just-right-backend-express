@@ -11,6 +11,7 @@ import {
 } from "../../config/gemini";
 import { getLanguageName } from "../transcription";
 import NoteQuestion from "../../models/note-question";
+import { SchemaType } from "@google/generative-ai";
 
 export async function generateQuiz(note: Note): Promise<IQuizQuestion[]> {
   const questions = await collectQuestionsFromSummary(note);
@@ -80,29 +81,21 @@ export async function generateQuizWithGemini(note: Note) {
   const prompt = `Without explaining, generate quiz from these questions and answers: 
   ${JSON.stringify(questions)}
 
-Reference content:
-${note.content}
 ------------------------------     
-Your response is a JSON object with a key "questions" and a value is a JSON array. (${
+Your response is a JSON array of quizzes. (${
     note.target_language
       ? getLanguageName(note.target_language)
       : getLanguageName(note.source_language)
   } language)
 
 Example output:
-{
-"questions": [{
+[{
   "question": "question 1",
-  "answers": ["answer 1", "answer 2", "answer 3", "answer 4"],
+  "answers": ["short answer 1", "short answer 2", "short answer 3", "short answer 4"],
   "correct_answer": 1 (index of the correct answer)
-}, {
-  "question": "question 2",
-  "answers": ["answer 1", "answer 2", "answer 3", "answer 4"],
-  "correct_answer": 0
-}]
-}`;
+}]`;
   console.log(prompt);
-  const response = await gemini20Flash.generateContent({
+  const response = await gemini15Flash.generateContent({
     contents: [
       {
         parts: [
@@ -115,13 +108,35 @@ Example output:
     ],
     generationConfig: {
       temperature: 0.2,
+      responseMimeType: "application/json",
+      responseSchema: {
+        description: "Quizzes",
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            question: { type: SchemaType.STRING },
+            answers: {
+              type: SchemaType.ARRAY,
+              description: "4 short options for quiz question",
+              items: { type: SchemaType.STRING, description: "max 15 words" },
+            },
+            correct_answer: {
+              type: SchemaType.NUMBER,
+              description: "index of the correct answer",
+            },
+          },
+          required: ["question", "answers", "correct_answer"],
+        },
+      },
     },
   });
   console.timeEnd("generateQuizWithGemini");
+  const text = response.response.text();
+  console.log(text);
+  const questionsContent = cleanAndParseGeminiResponse(text);
 
-  let questionsContent = cleanAndParseGeminiResponse(response.response.text());
-
-  return questionsContent.questions;
+  return questionsContent;
 }
 
 async function translateQuizArray(note: Note, quizzes: any[]) {

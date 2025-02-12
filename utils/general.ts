@@ -40,8 +40,10 @@ export function trimQuotes(text: string): string {
   return text.replace(/^["'`]|["'`]$/g, "").trim();
 }
 
-export function extractYoutubeId(url: string) {
-  const urlObj = new URL(url);
-  const id = urlObj.searchParams.get("v");
-  return id;
+export function getYouTubeVideoId(url: string): string | null {
+  const regex =
+    /(?:youtube\.com\/.*[?&]v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/;
+
+  const match = url.match(regex);
+  return match ? match[1] : null;
 }

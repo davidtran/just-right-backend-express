@@ -1,47 +1,9 @@
 import openai from "../config/openai";
 import { Question } from "../models/question";
-import {
-  cleanAndParseGeminiResponse,
-  gemini15Flash,
-  gemini20Flash,
-} from "../config/gemini";
+import { cleanAndParseGeminiResponse, gemini20Flash } from "../config/gemini";
 import groq, { GROQ_MODEL } from "../config/groq";
 import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
-
-export async function convertImageToText(
-  base64Image: string
-): Promise<{ content: string; is_math_exercise: boolean }> {
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Convert the provided image into text. Your response is a JSON object with 2 fields: content and is_math_exercise. Content is empty if there is no text quesion in the image.`,
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/jpg;base64,${base64Image}`,
-            },
-          },
-        ],
-      },
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  const content = res.choices[0].message.content;
-  console.log(content);
-  if (!content) {
-    throw new Error("No content in the response");
-  }
-  const json = JSON.parse(content);
-  return json;
-}
 
 export async function convertImageToTextWithGemini(
   base64Image: string

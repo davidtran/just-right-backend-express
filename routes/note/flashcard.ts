@@ -1,13 +1,16 @@
 import { Router, Request, Response } from "express";
 import { authenticateUser } from "../../middlewares/auth";
 import { Note } from "../../models/note";
-import NoteChunks from "../../models/note-chunk";
 import { logError } from "../../config/firebaseAdmin";
-import openai from "../../config/openai";
-import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Flashcard } from "../../models/flashcard";
-import { gemini15Flash } from "../../config/gemini";
+import {
+  cleanAndParseGeminiResponse,
+  gemini15Flash,
+  gemini20Flash,
+} from "../../config/gemini";
 import NoteQuestion from "../../models/note-question";
+import { SchemaType } from "@google/generative-ai";
+import { getLanguageName } from "../../utils/transcription";
 
 interface FlashcardItem {
   question: string;
@@ -99,20 +102,19 @@ async function generateFlashcardsFromNote(note: Note) {
 
 async function translateFlashcardArray(note: Note, quizzes: any[]) {
   console.time("translateFlashcardArray");
-
+  const prompt = `Translate this JSON array to ${getLanguageName(
+    note.target_language
+  )}: ${JSON.stringify(quizzes)}
+  
+Return only the translated JSON array without any additional text or explanation, example:
+[{"question": string, "answer": string}]`;
+  console.log(prompt);
   const response = await gemini15Flash.generateContent({
     contents: [
       {
         parts: [
           {
-            text: `Translate this JSON array to ${
-              note.target_language
-            }. Return only the translated JSON object without any additional text or explanation.\n\n${JSON.stringify(
-              quizzes
-            )}
-            
-            Example output:
-            [{"question": string, "answer": string}]`,
+            text: prompt,
           },
         ],
         role: "user",
@@ -120,23 +122,28 @@ async function translateFlashcardArray(note: Note, quizzes: any[]) {
     ],
     generationConfig: {
       temperature: 0.1,
+      responseMimeType: "application/json",
+      responseSchema: {
+        description: "Flashcards",
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            question: { type: SchemaType.STRING },
+            answer: { type: SchemaType.STRING },
+          },
+          required: ["question", "answer"],
+        },
+      },
     },
   });
 
   console.timeEnd("translateFlashcardArray");
-  let text = response.response.text();
-  if (text.startsWith("```json")) {
-    text = text.split("\n")[1];
-  }
-  if (!text) {
-    throw new Error("No content returned from Gemini");
-  }
 
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error("Failed to parse Gemini response as JSON");
-  }
+  let text = response.response.text();
+  console.log(text);
+  const json = cleanAndParseGeminiResponse(text);
+  return json;
 }
 
 export default router;

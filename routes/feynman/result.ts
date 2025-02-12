@@ -2,9 +2,8 @@ import { Router, Request, Response } from "express";
 import { authenticateUser } from "../../middlewares/auth";
 import FeynmanUsage from "../../models/feynman-usage";
 import { IChatMessage } from "../../constants/interfaces";
-import openai from "../../config/openai";
 import { logError } from "../../config/firebaseAdmin";
-import deepseek from "../../config/deepseek";
+
 import {
   cleanAndParseGeminiResponse,
   gemini20Flash,

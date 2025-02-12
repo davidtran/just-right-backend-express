@@ -37,9 +37,7 @@ router.post("/pdf", authenticateUser, async (req: Request, res: Response) => {
     const note = await Note.create({
       user_id: userRecord.id,
       source_type: "pdf",
-      target_language: fields.target_language
-        ? String(fields.target_language)
-        : "",
+      target_language: fields.language ? String(fields.language) : "",
     });
 
     createNoteJob({

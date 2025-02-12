@@ -24,18 +24,24 @@ export class Quiz extends Model {
   })
   note_id!: string;
 
-  @Column
+  @Column({
+    type: DataType.STRING(500),
+  })
   question!: string;
 
   @Column({
-    type: DataType.ARRAY(DataType.STRING),
+    type: DataType.ARRAY(DataType.STRING(500)),
   })
   answers!: string[];
 
-  @Column
+  @Column({
+    type: DataType.NUMBER,
+  })
   correct_answer!: number;
 
-  @Column
+  @Column({
+    type: DataType.STRING(1000),
+  })
   explanation!: string;
 
   @Default("pending")

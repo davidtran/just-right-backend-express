@@ -10,6 +10,7 @@ import {
 } from "../../config/gemini";
 import { Note } from "../../models/note";
 import { SchemaType } from "@google/generative-ai";
+import { getLanguageName } from "../transcription";
 
 export async function generateNoteSummary(content: string) {
   console.time("generateNoteSummary");
@@ -39,7 +40,7 @@ export async function generateNoteSummary(content: string) {
 
 export async function generateNoteSummaryWithGemini(content: string) {
   const summary = await gemini20Flash.generateContent([
-    `Without explanation, summarize the content of the provided text in a study-note style using Markdown. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections. Summary content must be in same language as input text.
+    `Without explanation, summarize the content of the provided text as a beautiful markdown study-note. Your response must include title (should not says it is a summary), heading, bullets, tables (if applicable), and concise sections. Output content must be in same language as input text.
 Text: ${content}`,
   ]);
   return summary.response.text();
@@ -48,18 +49,15 @@ Text: ${content}`,
 export async function generateBookSummary(content: string) {
   console.time("generateBookSummary");
   const summary = await gemini20Flash.generateContent([
-    `Without explanation, summarize the content of the book in a study-note style using Markdown. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections. Summary content must be in same language as input text.
-Text: ${content}`,
+    `Without explanation, summarize the content of the provided PDF content as a beautiful markdown study-note. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections. Output content must be in same language as input text.
+PDF content: ${content}`,
   ]);
   return summary.response.text();
 }
 
 export function extractNoteTitle(content: string) {
   const firstLine = content.split("\n")[0];
-  const semicolonIndex = firstLine.indexOf(":");
-  const slicePosition = semicolonIndex !== -1 ? semicolonIndex + 1 : 0;
-  console.log(firstLine, semicolonIndex, slicePosition);
-  const title = trimStart(firstLine.slice(slicePosition).trim(), "#").trim();
+  const title = trimStart(firstLine.trim(), "#").trim();
   return title;
 }
 
@@ -154,24 +152,23 @@ export async function extractNoteKeyQuestions(note: Note): Promise<
   {
     question: string;
     best_answer: string;
-    explanation: string;
-    importance: number;
   }[]
 > {
   const questionCount = await estimateQuestionCount(note.content);
-  const prompt = `Without explanation, extract all key questions to help the user understand the content: ${note.content}
+  const prompt = `Without explanation, extract all key questions and answers for each question from this note:
+  
+Note content: ${note.content}
   
 ----
-Your response is a JSON object, use this format:
-{
-  "questions": [{    
-    "question": string - must be descriptive - avoid yes/no question,    
-    "best_answer": string - must be descriptive,    
-  }]
-}
+Your response is a JSON array, use this format:
+[{    
+  "question": string - must be descriptive - avoid yes/no question,    
+  "best_answer": best answer for the question - must be descriptive,    
+}]
 
-Question and answer must be in same language as input content.
+Question and answer must be in ${getLanguageName(note.source_language)}
 `;
+  console.log(prompt);
   console.time("extractNoteKeyQuestions");
   const result = await gemini20Flash.generateContent({
     contents: [
@@ -181,9 +178,10 @@ Question and answer must be in same language as input content.
       },
     ],
     generationConfig: {
-      temperature: 0.1,
+      temperature: 0.4,
+      responseMimeType: "application/json",
       responseSchema: {
-        description: "Key questions and answers",
+        description: "Array of question and answer",
         type: SchemaType.ARRAY,
         items: {
           type: SchemaType.OBJECT,
@@ -195,7 +193,7 @@ Question and answer must be in same language as input content.
             },
             best_answer: {
               type: SchemaType.STRING,
-              description: "Best answer",
+              description: "Best answer for the question",
               nullable: false,
             },
           },
@@ -206,6 +204,7 @@ Question and answer must be in same language as input content.
   });
   const response = result.response.text();
   const json = cleanAndParseGeminiResponse(response);
+  console.log(json);
   console.timeEnd("extractNoteKeyQuestions");
-  return json.questions;
+  return json;
 }
