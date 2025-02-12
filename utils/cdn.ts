@@ -2,7 +2,8 @@ import aws from "aws-sdk";
 import { createReadStream } from "fs";
 import path from "path";
 import { logError } from "../config/firebaseAdmin";
-const mime = require("mime");
+const mime = require("mime-types");
+
 const spacesEndpoint = new aws.Endpoint("sgp1.digitaloceanspaces.com");
 const credentials = new aws.Credentials(
   process.env.SPACE_ACCESS_KEY_ID || "",

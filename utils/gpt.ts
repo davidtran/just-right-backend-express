@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { ChatCompletionMessageParam } from "openai/resources";
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { resizeAndConvertImageToBase64 } from "./image";
 import { User } from "../models/user";
 import { Question } from "../models/question";

@@ -36,6 +36,7 @@
     "llm-chunk": "^0.0.1",
     "lodash": "^4.17.21",
     "mime": "^4.0.6",
+    "mime-types": "^2.1.35",
     "node-html-parser": "^7.0.1",
     "nodemon": "^3.1.9",
     "openai": "^4.77.3",
