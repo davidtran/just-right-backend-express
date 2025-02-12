@@ -155,7 +155,7 @@ export async function extractNoteKeyQuestions(note: Note): Promise<
   }[]
 > {
   const questionCount = await estimateQuestionCount(note.content);
-  const prompt = `Without explanation, extract all key questions and answers for each question from this note:
+  const prompt = `Without explanation, extract at least ${questionCount} or more key questions and answers for each question from this note:
   
 Note content: ${note.content}
   

@@ -2,7 +2,7 @@ import aws from "aws-sdk";
 import { createReadStream } from "fs";
 import path from "path";
 import { logError } from "../config/firebaseAdmin";
-
+const mime = require("mime");
 const spacesEndpoint = new aws.Endpoint("sgp1.digitaloceanspaces.com");
 const credentials = new aws.Credentials(
   process.env.SPACE_ACCESS_KEY_ID || "",
@@ -27,13 +27,15 @@ export async function uploadObject(filepath: string): Promise<string | null> {
       Key: fileName,
       Body: fileStream,
       ACL: "public-read",
-      ContentType: "audio/mp4",
+      ContentType: mime.getType(filepath) || "audio/mp3",
     };
 
     try {
+      console.time("uploadObject");
       s3Client.upload(params, undefined, (err, data) => {
         console.log(err, data);
         fileStream.destroy();
+        console.timeEnd("uploadObject");
         if (!err) resolve(getS3PublicPath(filepath));
       });
     } catch (error) {
