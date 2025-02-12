@@ -28,7 +28,7 @@ export async function uploadObject(filepath: string): Promise<string | null> {
       Key: fileName,
       Body: fileStream,
       ACL: "public-read",
-      ContentType: mime.getType(filepath) || "audio/mp3",
+      ContentType: mime.lookup(filepath) || "audio/mp3",
     };
 
     try {

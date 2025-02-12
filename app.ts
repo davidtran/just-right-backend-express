@@ -3,7 +3,8 @@ dotenv.config({ path: ".env.local" });
 
 import { auth } from "firebase-admin";
 import { DecodedIdToken } from "firebase-admin/auth";
-
+const { ReadableStream } = require("web-streams-polyfill");
+global.ReadableStream = ReadableStream;
 // Extend Express Request type to include user
 declare global {
   namespace Express {

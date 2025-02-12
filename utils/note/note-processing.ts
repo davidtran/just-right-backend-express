@@ -1,5 +1,5 @@
 import { trimStart } from "lodash";
-import deepseek from "../../config/deepseek";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import fireworks, { FireworksModels } from "../../config/fireworks";
 import openai from "../../config/openai";
 import { chunk } from "llm-chunk";
@@ -117,7 +117,7 @@ export async function generateNoteEmbedding(content: string) {
 async function chunkText(content: string) {
   const chunks = chunk(content, {
     minLength: 500,
-    maxLength: 5000,
+    maxLength: 2000,
     splitter: "sentence",
     overlap: 200,
   });
@@ -126,7 +126,7 @@ async function chunkText(content: string) {
 }
 
 export async function generateNoteChunks(content: string) {
-  const chunks = await chunkText(content);
+  const chunks = await chunkWithLangChain(content, 300, 50);
   const embeddings = await Promise.all(
     chunks.map((chunk) => generateNoteEmbedding(chunk))
   );
@@ -155,7 +155,7 @@ export async function extractNoteKeyQuestions(note: Note): Promise<
   }[]
 > {
   const questionCount = await estimateQuestionCount(note.content);
-  const prompt = `Without explanation, extract at least ${questionCount} or more key questions and answers for each question from this note:
+  const prompt = `Without explanation, extract at least ${5} or more key questions and answers for each question from this note:
   
 Note content: ${note.content}
   
@@ -203,8 +203,23 @@ Question and answer must be in ${getLanguageName(note.source_language)}
     },
   });
   const response = result.response.text();
+  console.log(response);
   const json = cleanAndParseGeminiResponse(response);
   console.log(json);
   console.timeEnd("extractNoteKeyQuestions");
   return json;
+}
+
+export async function chunkWithLangChain(
+  text: string,
+  chunkSize = 256,
+  chunkOverlap = 50
+) {
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize,
+    chunkOverlap,
+    separators: ["\n\n", "\n", " "], // Prioritizing paragraph, then line, then space
+  });
+
+  return await splitter.splitText(text);
 }
