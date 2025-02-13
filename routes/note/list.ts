@@ -35,6 +35,7 @@ router.get("/list", authenticateUser, async (req: Request, res: Response) => {
       where: {
         user_id: userRecord.id,
         is_sample: false,
+        processing_status: "completed",
       },
     });
 

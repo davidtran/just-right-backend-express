@@ -52,11 +52,11 @@ export async function generateBookSummary(content: string) {
     `Without explanation, summarize the content of the provided PDF content as a beautiful markdown study-note. Your summary should be detailed and comprehensive for every chapter of the book, and must include heading, bullets, tables (if applicable), and concise sections. Output content must be in same language as input text.
 PDF content: ${content}`,
   ]);
-  return summary.response.text();
+  return summary.response.text().trim();
 }
 
 export function extractNoteTitle(content: string) {
-  const firstLine = content.split("\n")[0];
+  const firstLine = content.trim().split("\n")[0];
   const title = trimStart(firstLine.trim(), "#").trim();
   return title;
 }
@@ -163,7 +163,7 @@ Note content: ${note.content}
 Your response is a JSON array, use this format:
 [{    
   "question": string - must be descriptive - avoid yes/no question,    
-  "best_answer": best answer for the question - must be descriptive,    
+  "best_answer": best answer for the question,    
 }]
 
 Question and answer must be in ${getLanguageName(note.source_language)}

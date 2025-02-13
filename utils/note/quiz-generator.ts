@@ -79,7 +79,12 @@ export async function generateQuizWithGemini(note: Note) {
     where: { note_id: note.id },
   });
   const prompt = `Without explaining, generate quiz from these questions and answers: 
-  ${JSON.stringify(questions)}
+  ${JSON.stringify(
+    questions.map((item) => ({
+      question: item.question,
+      best_answer: item.best_answer,
+    }))
+  )}
 
 ------------------------------     
 Your response is a JSON array of quizzes. (${

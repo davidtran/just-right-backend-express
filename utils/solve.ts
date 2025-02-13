@@ -1,6 +1,10 @@
 import openai from "../config/openai";
 import { Question } from "../models/question";
-import { cleanAndParseGeminiResponse, gemini20Flash } from "../config/gemini";
+import {
+  cleanAndParseGeminiResponse,
+  gemini15Flash,
+  gemini20Flash,
+} from "../config/gemini";
 import groq, { GROQ_MODEL } from "../config/groq";
 import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
@@ -68,7 +72,7 @@ export async function convertImageToTextWithGemini(
   return json;
 }
 
-const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax. Use $...$ for inline math and $$...$$ for display math.`;
+const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax. Use $...$ or \(...\) for inline math and $$...$$ or \[...\] for display math.`;
 
 function getQuickSolveMessages(question: Question) {
   const messages = [
@@ -111,7 +115,11 @@ export async function explain(question: Question): Promise<string> {
   });
   messages.push({
     role: "user",
-    content: `Explain your previous answer(s) step by step.`,
+    content: `Question: ${JSON.stringify(question.question)}.
+
+Answer: ${question.short_answer}.
+
+Do not repeat the question, explain every answer(s) in the question(s) step by step so I can understand it clearly.`,
   });
   console.log(JSON.stringify(messages));
   console.time("explainAnswer");
@@ -138,7 +146,7 @@ async function ensureTranslation(question: Question, answer: string) {
     prompt += `\n${MATH_PROMPT}`;
   }
 
-  const response = await gemini20Flash.generateContent([{ text: prompt }]);
+  const response = await gemini15Flash.generateContent([{ text: prompt }]);
   return response.response.text();
 }
 
@@ -157,6 +165,6 @@ Your task: do not explain, rewrite the answer in same language as question.`;
     prompt += `\n${MATH_PROMPT}`;
   }
 
-  const response = await gemini20Flash.generateContent([{ text: prompt }]);
+  const response = await gemini15Flash.generateContent([{ text: prompt }]);
   return response.response.text();
 }
