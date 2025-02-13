@@ -32,7 +32,7 @@ export async function convertImageToTextWithGemini(
       {
         parts: [
           {
-            text: "Extract the text from the image. Your response is a JSON of 2 fields: content, is_math_exercise, direct_answer. Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.",
+            text: "Extract the text from the image. Your response is a JSON of 3 fields: content, is_math_exercise, direct_answer. Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.",
           },
         ],
         role: "user",
