@@ -10,7 +10,7 @@ import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
 
 export async function convertImageToTextWithGemini(base64Image: string) {
-  const res = await gemini20Flash.generateContent({
+  const res = await gemini15Flash.generateContent({
     contents: [
       {
         parts: [
@@ -54,7 +54,7 @@ ${content}.
 Your response is a JSON of 3 fields: 
 - content (Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.)
 - is_math_exercise (boolean)
-- direct_answer (boolean)`,
+- objective_question (is this a objective question?)`,
           },
         ],
         role: "user",
@@ -76,37 +76,34 @@ Your response is a JSON of 3 fields:
             description: "is this a math exercise?",
             nullable: false,
           },
-          direct_answer: {
+          objective_question: {
             type: SchemaType.BOOLEAN,
             description: "is this a objective question?",
             nullable: false,
           },
         },
-        required: ["content", "is_math_exercise", "direct_answer"],
+        required: ["content", "is_math_exercise", "objective_question"],
       },
     },
   });
 
   const text = res.response.text();
-
+  console.log(text);
   const json = cleanAndParseGeminiResponse(text);
+  json.direct_answer = json.objective_question;
 
   return json;
 }
 
-const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax. Use $...$ or \(...\) for inline math and $$...$$ or \[...\] for display math.`;
+const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax.`;
 
 function getQuickSolveMessages(question: Question) {
   const messages = [
     {
-      role: "system",
-      content: "You are TutorAI",
-    },
-    {
       role: "user",
-      content: `Do not explain, give me a short ${
-        question.direct_answer ? "answer" : "result"
-      } for question(s): ${JSON.stringify(question.question)}.`,
+      content: `Answer this question, step by step: ${JSON.stringify(
+        question.question
+      )}.`,
     },
   ] as Groq.Chat.ChatCompletionMessageParam[];
 
@@ -118,42 +115,26 @@ export async function quickSolve(question: Question): Promise<string> {
   const response = await groq.chat.completions.create({
     model: GROQ_MODEL.DEEPSEEK_R1,
     messages,
-    reasoning_format: "hidden",
+    reasoning_format: "parsed",
   });
+
+  console.log(response.choices[0].message.reasoning);
 
   const content = response.choices[0].message.content || "";
   const translatedContent = await ensureQuickSolveTranslation(
     question,
     content
   );
+  question.short_answer = translatedContent;
+  question.detail_answer = content;
   return translatedContent;
 }
 
 export async function explain(question: Question): Promise<string> {
-  const messages = getQuickSolveMessages(question);
-  messages.push({
-    role: "assistant",
-    content: question.short_answer,
-  });
-  messages.push({
-    role: "user",
-    content: `Question: ${JSON.stringify(question.question)}.
-
-Answer: ${question.short_answer}.
-
-Do not repeat the question, explain every answer(s) in the question(s) step by step so I can understand it clearly.`,
-  });
-  console.log(JSON.stringify(messages));
-  console.time("explainAnswer");
-  const response = await groq.chat.completions.create({
-    model: GROQ_MODEL.DEEPSEEK_R1,
-    messages,
-    reasoning_format: "hidden",
-  });
-  console.timeEnd("explainAnswer");
-
-  const content = response.choices[0].message.content || "";
-  const translatedContent = await ensureTranslation(question, content);
+  const translatedContent = await ensureTranslation(
+    question,
+    question.detail_answer
+  );
   return translatedContent;
 }
 
@@ -168,25 +149,25 @@ async function ensureTranslation(question: Question, answer: string) {
     prompt += `\n${MATH_PROMPT}`;
   }
 
-  const response = await gemini15Flash.generateContent([{ text: prompt }]);
+  const response = await gemini20Flash.generateContent([{ text: prompt }]);
   return response.response.text();
 }
 
 async function ensureQuickSolveTranslation(question: Question, answer: string) {
-  let prompt = `Question: ${JSON.stringify(
-    question.question
-  )}. My answer: ${answer}. 
------
-Your task: do not explain, rewrite the answer in same language as question.`;
+  let prompt = `Question: ${JSON.stringify(question.question)}.
 
-  if (question.direct_answer) {
-    prompt += `The output should contain only answer without any explanation.`;
+Answer: ${answer}.`;
+
+  if (question.direct_answer || question.math) {
+    prompt += `Remove any unnecessary explanation, just give me the result.`;
   }
+
+  prompt += `\nEnsure the answer is in the same language as the question.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
   }
 
-  const response = await gemini15Flash.generateContent([{ text: prompt }]);
+  const response = await gemini20Flash.generateContent([{ text: prompt }]);
   return response.response.text();
 }
