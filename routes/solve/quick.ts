@@ -2,7 +2,11 @@ import { Router, Request, Response } from "express";
 import { authenticateUser } from "../../middlewares/auth";
 import { logError } from "../../config/firebaseAdmin";
 import { Question } from "../../models/question";
-import { convertImageToTextWithGemini, quickSolve } from "../../utils/solve";
+import {
+  convertImageToTextWithGemini,
+  parseExerciseContent,
+  quickSolve,
+} from "../../utils/solve";
 
 const router = Router();
 
@@ -26,9 +30,7 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
     }
 
     if (question.type === "photo") {
-      const exerciseContent = await convertImageToTextWithGemini(
-        question.content
-      );
+      const exerciseContent = await parseExerciseContent(question.content);
       question.question = exerciseContent.content;
       question.math = exerciseContent.is_math_exercise;
       question.direct_answer = exerciseContent.direct_answer;

@@ -9,13 +9,7 @@ import groq, { GROQ_MODEL } from "../config/groq";
 import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
 
-export async function convertImageToTextWithGemini(
-  base64Image: string
-): Promise<{
-  content: string;
-  direct_answer: boolean;
-  is_math_exercise: boolean;
-}> {
+export async function convertImageToTextWithGemini(base64Image: string) {
   const res = await gemini20Flash.generateContent({
     contents: [
       {
@@ -32,7 +26,35 @@ export async function convertImageToTextWithGemini(
       {
         parts: [
           {
-            text: "Extract the text from the image. Your response is a JSON of 3 fields: content, is_math_exercise, direct_answer. Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.",
+            text: "Extract the text from the image.",
+          },
+        ],
+        role: "user",
+      },
+    ],
+  });
+
+  const text = res.response.text();
+  return text;
+}
+
+export async function parseExerciseContent(content: string): Promise<{
+  content: string;
+  direct_answer: boolean;
+  is_math_exercise: boolean;
+}> {
+  const res = await gemini20Flash.generateContent({
+    contents: [
+      {
+        parts: [
+          {
+            text: `Analyze the text content below:
+${content}. 
+
+Your response is a JSON of 3 fields: 
+- content (Format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.)
+- is_math_exercise (boolean)
+- direct_answer (boolean)`,
           },
         ],
         role: "user",

@@ -10,6 +10,7 @@ import sequelize from "../../config/database";
 import { authenticateUser } from "../../middlewares/auth";
 import { resizeAndConvertImageToBase64 } from "../../utils/image";
 import { User } from "../../models/user";
+import { parseExerciseContent } from "../../utils/solve";
 
 const router = Router();
 
@@ -104,16 +105,17 @@ async function handleTextUpload(
   key: string,
   userRecord: User
 ) {
-  const questionInfo = await readText(content);
-  console.log(questionInfo);
-  if (!questionInfo || !questionInfo.parsed_content.trim().length) {
+  const questionInfo = await parseExerciseContent(content);
+
+  if (!questionInfo || !questionInfo.content.trim().length) {
     throw new Error(RESPONSE_MESSAGES.INVALID_QUESTION);
   }
   const data = {
-    content: questionInfo.parsed_content,
+    content: questionInfo.content,
     key,
-    question: questionInfo.parsed_content,
-    math: questionInfo.is_math,
+    question: questionInfo.content,
+    math: questionInfo.is_math_exercise,
+    direct_answer: questionInfo.direct_answer,
   };
   const question = await Question.create({
     ...data,
