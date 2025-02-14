@@ -10,31 +10,19 @@ import Groq from "groq-sdk";
 import { SchemaType } from "@google/generative-ai";
 
 export async function convertImageToTextWithGemini(base64Image: string) {
-  const res = await gemini15Flash.generateContent({
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: base64Image,
-              mimeType: "image/jpeg",
-            },
-          },
-        ],
-        role: "user",
+  const res = await gemini15Flash.generateContent([
+    {
+      inlineData: {
+        data: base64Image,
+        mimeType: "image/jpeg",
       },
-      {
-        parts: [
-          {
-            text: "Extract the text from the image.",
-          },
-        ],
-        role: "user",
-      },
-    ],
-  });
+    },
+    "Extract text from the image, return empty string if no text is found",
+  ]);
 
   const text = res.response.text();
+
+  console.log(text);
   return text;
 }
 
@@ -95,7 +83,7 @@ Your response is a JSON of 3 fields:
   return json;
 }
 
-const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax.`;
+const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax. Ensure all inline math should be wrapped in \\(...\\) and display math should be wrapped in \\[...\\].`;
 
 function getQuickSolveMessages(question: Question) {
   const messages = [
@@ -143,7 +131,7 @@ async function ensureTranslation(question: Question, answer: string) {
     question.question
   )}. Answer: ${answer}. 
   
-  Your task: Do not explain, rewrite the answer in same language as question`;
+  Your task: Do not explain, rewrite the answer in same language as question.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;

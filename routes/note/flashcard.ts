@@ -109,7 +109,7 @@ async function translateFlashcardArray(note: Note, quizzes: any[]) {
 Return only the translated JSON array without any additional text or explanation, example:
 [{"question": string, "answer": string}]`;
   console.log(prompt);
-  const response = await gemini15Flash.generateContent({
+  const response = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [

@@ -10,7 +10,10 @@ import sequelize from "../../config/database";
 import { authenticateUser } from "../../middlewares/auth";
 import { resizeAndConvertImageToBase64 } from "../../utils/image";
 import { User } from "../../models/user";
-import { parseExerciseContent } from "../../utils/solve";
+import {
+  convertImageToTextWithGemini,
+  parseExerciseContent,
+} from "../../utils/solve";
 
 const router = Router();
 
@@ -130,15 +133,16 @@ async function handleImageUpload(
   key: string,
   userRecord: User
 ) {
-  const photoContent = await resizeAndConvertImageToBase64(filepath, 512);
-  if (!photoContent) {
+  const base64Image = await resizeAndConvertImageToBase64(filepath, 512);
+  const content = await convertImageToTextWithGemini(base64Image);
+
+  if (!content || !content.trim().length) {
     throw new Error("Invalid image content");
   }
   const data = {
-    content: photoContent,
+    content: base64Image,
     key,
-    question: "",
-    math: false,
+    question: content,
   };
   const question = await Question.create({
     ...data,

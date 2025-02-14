@@ -30,7 +30,7 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
     }
 
     if (question.type === "photo") {
-      const exerciseContent = await parseExerciseContent(question.content);
+      const exerciseContent = await parseExerciseContent(question.question);
       question.question = exerciseContent.content;
       question.math = exerciseContent.is_math_exercise;
       question.direct_answer = exerciseContent.direct_answer;

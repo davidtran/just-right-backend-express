@@ -100,7 +100,7 @@ Example output:
   "correct_answer": 1 (index of the correct answer)
 }]`;
   console.log(prompt);
-  const response = await gemini15Flash.generateContent({
+  const response = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [

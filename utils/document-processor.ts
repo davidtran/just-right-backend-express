@@ -1,4 +1,4 @@
-import { gemini15Flash } from "../config/gemini";
+import { gemini15Flash, gemini20Flash } from "../config/gemini";
 import openai from "../config/openai";
 import { readFile } from "fs/promises";
 import { resizeAndConvertImageToBase64 } from "./image";
@@ -20,7 +20,7 @@ export async function detectLanguage(text: string): Promise<string> {
 
 export async function extractTextFromImage(imagePath: string) {
   const base64Image = await resizeAndConvertImageToBase64(imagePath);
-  const text = await gemini15Flash.generateContent({
+  const text = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [
