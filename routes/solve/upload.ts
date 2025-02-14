@@ -110,7 +110,7 @@ async function handleTextUpload(
 ) {
   const questionInfo = await parseExerciseContent(content);
 
-  if (!questionInfo || !questionInfo.content.trim().length) {
+  if (!questionInfo || !questionInfo.content.length) {
     throw new Error(RESPONSE_MESSAGES.INVALID_QUESTION);
   }
   const data = {
@@ -119,6 +119,7 @@ async function handleTextUpload(
     question: questionInfo.content,
     math: questionInfo.is_math_exercise,
     direct_answer: questionInfo.direct_answer,
+    language: questionInfo.language,
   };
   const question = await Question.create({
     ...data,
@@ -133,7 +134,7 @@ async function handleImageUpload(
   key: string,
   userRecord: User
 ) {
-  const base64Image = await resizeAndConvertImageToBase64(filepath, 512);
+  const base64Image = await resizeAndConvertImageToBase64(filepath, 800);
   const content = await convertImageToTextWithGemini(base64Image);
 
   if (!content || !content.trim().length) {
