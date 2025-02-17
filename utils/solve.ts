@@ -33,7 +33,7 @@ export async function convertImageToTextWithGemini(base64Image: string) {
 export async function parseExerciseContent(content: string): Promise<{
   content: string;
   direct_answer: boolean;
-  is_math_exercise: boolean;
+  math: boolean;
   language: string;
 }> {
   console.time("parseExerciseContent");
@@ -47,7 +47,7 @@ ${content}.
 
 Your response is a JSON of 3 fields: 
 - content (Without explanation, format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.)
-- is_math_exercise (boolean)
+- math (true if there is math expressions in the content?)
 - objective_question (is this a objective question?)
 - user_language (the language of the user)`,
           },
@@ -66,7 +66,7 @@ Your response is a JSON of 3 fields:
             description: "Image content",
             nullable: false,
           },
-          is_math_exercise: {
+          math: {
             type: SchemaType.BOOLEAN,
             description: "is this a math exercise?",
             nullable: false,
@@ -82,7 +82,7 @@ Your response is a JSON of 3 fields:
             nullable: false,
           },
         },
-        required: ["content", "is_math_exercise", "objective_question"],
+        required: ["content", "math", "objective_question", "user_language"],
       },
     },
   });
@@ -149,11 +149,9 @@ export async function explain(question: Question): Promise<string> {
 }
 
 async function ensureTranslation(question: Question, answer: string) {
-  let prompt = `Question: ${JSON.stringify(
-    question.question
-  )}. Answer: ${answer}. 
+  let prompt = `Text content: ${answer}. 
   
-  Your task: Ensure the answer is ${getLanguageName(
+  Your task: Ensure the output is ${getLanguageName(
     question.language
   )}. Do not change the format or meaning of the output.`;
 

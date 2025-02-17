@@ -117,7 +117,7 @@ async function handleTextUpload(
     content: questionInfo.content,
     key,
     question: questionInfo.content,
-    math: questionInfo.is_math_exercise,
+    math: questionInfo.math,
     direct_answer: questionInfo.direct_answer,
     language: questionInfo.language,
   };

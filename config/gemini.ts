@@ -2,9 +2,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
 
-const gemini15Flash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const gemini15Flash = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash-001",
+});
 
-const gemini20Flash = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const gemini20Flash = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash-001",
+});
 
 export { gemini15Flash, gemini20Flash };
 
