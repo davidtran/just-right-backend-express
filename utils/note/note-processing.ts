@@ -56,9 +56,15 @@ PDF content: ${content}`,
 }
 
 export function extractNoteTitle(content: string) {
-  const firstLine = content.trim().split("\n")[0];
-  const title = trimStart(firstLine.trim(), "#").trim();
-  return title;
+  const contentArray = content.split("\n");
+  if (!contentArray.length) {
+    return "Invalid text";
+  }
+  const title = contentArray.find((line) => line.startsWith("# "));
+  if (!title) {
+    return contentArray[0].trim();
+  }
+  return title.replace("# ", "").trim();
 }
 
 export async function generateNoteTitle(content: string) {
@@ -152,6 +158,7 @@ export async function extractNoteKeyQuestions(note: Note): Promise<
   {
     question: string;
     best_answer: string;
+    category: string;
   }[]
 > {
   const questionCount = await estimateQuestionCount(note.content);
@@ -163,7 +170,7 @@ Note content: ${note.content}
 Your response is a JSON array, use this format:
 [{    
   "question": string - must be descriptive - avoid yes/no question,    
-  "best_answer": best answer for the question,    
+  "best_answer": best answer for the question  
 }]
 
 Question and answer must be in ${getLanguageName(note.source_language)}

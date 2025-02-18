@@ -56,6 +56,7 @@ noteQueue.process(10, async (job: any, done: any) => {
     note.processing_status = "failed";
     await note.save();
     logError(error as Error, {
+      route: "note-queue",
       jobId: job.id,
       noteId: job.data.id,
       type: job.data.type,
@@ -137,12 +138,14 @@ async function postprocessNote(note: Note, type: string, files: string[]) {
   }
 
   const keyQuestions = await extractNoteKeyQuestions(note);
+  console.log("keyQuestions", keyQuestions);
   await Promise.all(
     keyQuestions.map((question) =>
       NoteQuestion.create({
         note_id: note.id,
         question: question.question,
         best_answer: question.best_answer,
+        category: question.category,
       })
     )
   );

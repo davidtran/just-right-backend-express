@@ -5,6 +5,7 @@ import { TranscriptJSON, xmlToJson } from "../../utils/xmlToJson";
 import { Note } from "../../models/note";
 import { createNoteJob } from "../../queues/note-queue";
 import { downloadAudio } from "../../utils/downloadFile";
+import { logError } from "../../config/firebaseAdmin";
 
 const router = Router();
 
@@ -35,6 +36,12 @@ router.post(
 
       return res.status(200).json({ note_id: note.id });
     } catch (error) {
+      await logError(error as Error, {
+        route: "/upload/youtube",
+        userId: req.user?.id,
+        url: req.body.url,
+      });
+
       return res.status(500).json({ error: "Failed to fetch transcript" });
     }
   }

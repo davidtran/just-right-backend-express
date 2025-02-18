@@ -32,6 +32,11 @@ export class NoteQuestion extends Model {
     type: DataType.STRING(1000),
   })
   best_answer!: string;
+
+  @Column({
+    type: DataType.STRING(100),
+  })
+  category!: string;
 }
 
 export default NoteQuestion;

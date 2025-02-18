@@ -14,6 +14,7 @@ import {
   convertImageToTextWithGemini,
   parseExerciseContent,
 } from "../../utils/solve";
+import { logError } from "../../config/firebaseAdmin";
 
 const router = Router();
 
@@ -50,7 +51,10 @@ router.post(
 
       return res.status(200).json(data);
     } catch (e) {
-      console.error(e);
+      await logError(e as Error, {
+        route: "/upload/upload",
+        userId: req.user?.id,
+      });
       return res.status(500).json({
         message: e instanceof Error ? e.message : "Internal server error",
       });

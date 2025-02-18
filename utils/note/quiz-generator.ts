@@ -12,6 +12,7 @@ import {
 import { getLanguageName } from "../transcription";
 import NoteQuestion from "../../models/note-question";
 import { SchemaType } from "@google/generative-ai";
+import { shuffle } from "lodash";
 
 export async function generateQuiz(note: Note): Promise<IQuizQuestion[]> {
   const questions = await collectQuestionsFromSummary(note);
@@ -262,5 +263,5 @@ export function shuffleQuizAnswers(
     };
   });
 
-  return newQuestions;
+  return shuffle(newQuestions);
 }

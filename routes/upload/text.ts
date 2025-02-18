@@ -32,7 +32,7 @@ router.post("/text", authenticateUser, async (req: Request, res: Response) => {
     await logError(error as Error, {
       route: "/upload/text",
       userId: req.user?.id,
-      text: req.body.text,
+      text: text,
     });
 
     return res.status(500).json({ error: "Failed to process text" });

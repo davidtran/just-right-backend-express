@@ -4,6 +4,10 @@ import { detectLanguage } from "../../utils/document-processor";
 
 export async function preprocessYoutubeNote(note: Note, youtubeUrl: string) {
   const { title, text, segments } = await transcribeYoutube(youtubeUrl);
+
+  if (!text || text.length < 200) {
+    throw new Error("No text found");
+  }
   const language = await detectLanguage(text);
 
   note.source_language = language;

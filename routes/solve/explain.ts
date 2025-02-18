@@ -40,7 +40,7 @@ router.post(
       });
     } catch (error) {
       await logError(error as Error, {
-        context: "/solve/solve",
+        context: "/solve/explain",
         question_id: req.body.question_id,
       });
       return res.status(500).json({ error: "Internal server error" });

@@ -12,6 +12,11 @@ export const preprocessImageNote = async (note: Note, resources: string[]) => {
     resources.map((resource) => extractTextFromImage(resource))
   );
   const text = textArray.join("\n");
+
+  if (!text || text.length < 200) {
+    throw new Error("No text found");
+  }
+
   const language = await detectLanguage(text);
   note.source_language = language;
   note.content = text;

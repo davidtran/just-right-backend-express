@@ -6,6 +6,9 @@ import { uploadObject } from "../../utils/cdn";
 
 export const preprocessPdfNote = async (note: Note, pdfFile: string) => {
   const text = await extractTextFromPdf(pdfFile);
+  if (!text || text.length < 200) {
+    throw new Error("No text found");
+  }
   console.log("text", text);
   const sourceLanguage = await detectLanguage(text);
 

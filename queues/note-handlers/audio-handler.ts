@@ -21,6 +21,10 @@ export const preprocessAudioNote = async (note: Note, audioPath: string) => {
 
   const { text, language } = transcript;
 
+  if (!text || text.length < 200) {
+    throw new Error("No text found");
+  }
+
   note.source_language = language;
   note.timestamps = extractTimestamps(transcript.segments);
   note.content = text || "";
