@@ -3,7 +3,10 @@ import { authenticateUser } from "../../../middlewares/auth";
 import { Note } from "../../../models/note";
 import { logError } from "../../../config/firebaseAdmin";
 import { getLanguageName } from "../../../utils/transcription";
-import { translateWithGemini } from "../../../utils/note/note-processing";
+import {
+  extractNoteKeyQuestions,
+  translateWithGemini,
+} from "../../../utils/note/note-processing";
 import { redisClient } from "../../../config/redis";
 import { NOTE_SESSION_KEY_PREFIX } from "../../../constants/constants";
 import NoteQuestion from "../../../models/note-question";
@@ -42,6 +45,8 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
 
     const sessionData = await buildSessionData(note);
 
+    console.log("sessionData", sessionData);
+
     // Prepare the Feynman teaching prompt
     let firstQuestion = sessionData[0].question;
     if (note.target_language && note.source_language !== note.target_language) {
@@ -71,15 +76,32 @@ router.post("/init", authenticateUser, async (req: Request, res: Response) => {
 });
 
 async function buildSessionData(note: Note) {
-  const questionList = await NoteQuestion.findAll({
+  let questionList = await NoteQuestion.findAll({
     where: { note_id: note.id },
   });
 
+  if (questionList.length === 0) {
+    console.log("No question found, generating...");
+    const keyQuestions = await extractNoteKeyQuestions(note);
+    questionList = await Promise.all(
+      keyQuestions.map((question) =>
+        NoteQuestion.create({
+          note_id: note.id,
+          question: question.question,
+          best_answer: question.best_answer,
+          category: question.category,
+        })
+      )
+    );
+  }
+
+  const finalQuestions = shuffle(questionList).slice(0, 5);
+
   const rewriteQuestions = await rewriteQuestion(
-    questionList.map((question) => question.question)
+    finalQuestions.map((question) => question.question)
   );
 
-  const questions = questionList.map((question, index) => ({
+  const questions = finalQuestions.map((question, index) => ({
     question: rewriteQuestions[index],
     best_answer: question.best_answer,
   }));
