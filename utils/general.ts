@@ -47,3 +47,7 @@ export function getYouTubeVideoId(url: string): string | null {
   const match = url.match(regex);
   return match ? match[1] : null;
 }
+
+export async function asyncTimeout(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

@@ -79,34 +79,26 @@ export async function generateQuizWithGemini(note: Note) {
   const questions = await NoteQuestion.findAll({
     where: { note_id: note.id },
   });
-  const prompt = `Without explaining, generate quiz from these questions and answers: 
-  ${JSON.stringify(
-    questions.map((item) => ({
-      question: item.question,
-      best_answer: item.best_answer,
-    }))
-  )}
+  const quizItems = await Promise.all(
+    questions.map((question) =>
+      generateQuizItem(note, question.question, question.best_answer)
+    )
+  );
+  console.timeEnd("generateQuizWithGemini");
+  return quizItems;
+}
 
-------------------------------     
-Your response is a JSON array of quizzes. (${
-    note.target_language
-      ? getLanguageName(note.target_language)
-      : getLanguageName(note.source_language)
-  } language)
-
-Example output:
-[{
-  "question": "question 1",
-  "answers": ["short answer 1", "short answer 2", "short answer 3", "short answer 4"],
-  "correct_answer": 1 (index of the correct answer)
-}]`;
-  console.log(prompt);
+async function generateQuizItem(
+  note: Note,
+  question: string,
+  best_answer: string
+) {
   const response = await gemini20Flash.generateContent({
     contents: [
       {
         parts: [
           {
-            text: prompt,
+            text: `Generate a quiz for this question: ${question}\nHint: ${best_answer}\n\nYour response is a JSON object.`,
           },
         ],
         role: "user",
@@ -116,32 +108,28 @@ Example output:
       temperature: 0.2,
       responseMimeType: "application/json",
       responseSchema: {
-        description: "Quizzes",
-        type: SchemaType.ARRAY,
-        items: {
-          type: SchemaType.OBJECT,
-          properties: {
-            question: { type: SchemaType.STRING },
-            answers: {
-              type: SchemaType.ARRAY,
-              description: "4 short options for quiz question",
-              items: { type: SchemaType.STRING, description: "max 15 words" },
-            },
-            correct_answer: {
-              type: SchemaType.NUMBER,
-              description: "index of the correct answer",
-            },
+        type: SchemaType.OBJECT,
+        properties: {
+          question: { type: SchemaType.STRING },
+          answers: {
+            type: SchemaType.ARRAY,
+            description:
+              "4 options for quiz question - each options should have same length",
+            items: { type: SchemaType.STRING, description: "max 15 words" },
           },
-          required: ["question", "answers", "correct_answer"],
+          correct_answer: {
+            type: SchemaType.NUMBER,
+            description: "index of the correct answer",
+          },
         },
+        required: ["question", "answers", "correct_answer"],
       },
     },
   });
-  console.timeEnd("generateQuizWithGemini");
-  const text = response.response.text();
-  console.log(text);
-  const questionsContent = cleanAndParseGeminiResponse(text);
 
+  const text = response.response.text();
+  const questionsContent = cleanAndParseGeminiResponse(text);
+  console.log(questionsContent);
   return questionsContent;
 }
 
@@ -172,48 +160,6 @@ async function translateQuizArray(note: Note, quizzes: any[]) {
   });
 
   console.timeEnd("translateQuizArray");
-  let text = response.response.text();
-  if (text.startsWith("```json")) {
-    text = text.split("\n")[1];
-  }
-  if (!text) {
-    throw new Error("No content returned from Gemini");
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error("Failed to parse Gemini response as JSON");
-  }
-}
-
-async function translateQuizItem(note: Note, quiz: any) {
-  console.time("translateQuizItem");
-
-  const response = await gemini15Flash.generateContent({
-    contents: [
-      {
-        parts: [
-          {
-            text: `Translate this JSON object to ${
-              note.target_language
-            }. Return only the translated JSON object without any additional text or explanation.\n\n${JSON.stringify(
-              quiz
-            )}
-            
-            Example output:
-            {"question": "TikTok không cắt đứt quan hệ với ByteDance sẽ phải đối mặt với những hậu quả gì?", "answers": ["Phạt tiền đối với các cửa hàng ứng dụng và nhà cung cấp Internet", "Mất dữ liệu người dùng", "Bị cấm khỏi các cửa hàng ứng dụng", "Tất cả các điều trên"], "correct_answer": 3}`,
-          },
-        ],
-        role: "user",
-      },
-    ],
-    generationConfig: {
-      temperature: 0.1,
-    },
-  });
-
-  console.timeEnd("translateQuizItem");
   let text = response.response.text();
   if (text.startsWith("```json")) {
     text = text.split("\n")[1];

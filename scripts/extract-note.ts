@@ -51,7 +51,7 @@ async function getNoteData(noteId: string): Promise<NoteData | null> {
 
 // Example usage
 (async () => {
-  const noteId = "bb125585-7857-48be-a60f-3cfce458fc04";
+  const noteId = "05fa10fb-a523-427d-aafd-04bc95bcb498";
   const noteData = await getNoteData(noteId);
   if (noteData) {
     console.log(JSON.stringify(noteData, null, 2));
