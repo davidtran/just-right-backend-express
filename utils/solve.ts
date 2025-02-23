@@ -151,9 +151,9 @@ export async function explain(question: Question): Promise<string> {
 async function ensureTranslation(question: Question, answer: string) {
   let prompt = `Text content: ${answer}. 
   
-  Your task: Ensure the output is ${getLanguageName(
+  Your task: Ensure the output is in friendly ${getLanguageName(
     question.language
-  )}. Do not change the format or meaning of the output.`;
+  )} language. Do not change the format or meaning of the output.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
@@ -184,7 +184,9 @@ Answer: ${answer}.`;
     prompt += `Remove any unnecessary explanation, just give me the result.`;
   }
 
-  prompt += `\nEnsure the answer ${getLanguageName(language)}.`;
+  prompt += `\nEnsure the answer in friendly ${getLanguageName(
+    language
+  )} language.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
