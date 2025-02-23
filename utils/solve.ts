@@ -13,7 +13,7 @@ import { getLanguageName } from "./transcription";
 
 export async function convertImageToTextWithGemini(base64Image: string) {
   console.time("convertImageToTextWithGemini");
-  const res = await gemini15Flash.generateContent([
+  const res = await gemini20Flash.generateContent([
     {
       inlineData: {
         data: base64Image,
