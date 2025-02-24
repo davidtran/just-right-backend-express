@@ -89,7 +89,6 @@ Your response is a JSON of 3 fields:
   console.timeEnd("parseExerciseContent");
 
   const text = res.response.text();
-  console.log(text);
   const json = cleanAndParseGeminiResponse(text);
   json.direct_answer = json.objective_question;
   json.language = json.user_language;
@@ -153,7 +152,7 @@ async function ensureTranslation(question: Question, answer: string) {
   
   Your task: Ensure the output is in friendly ${getLanguageName(
     question.language
-  )} language. Do not change the format or meaning of the output.`;
+  )} language. Shorten the explanations, just enough to complete the answer(s).`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
@@ -184,9 +183,7 @@ Answer: ${answer}.`;
     prompt += `Remove any unnecessary explanation, just give me the result.`;
   }
 
-  prompt += `\nEnsure the answer in friendly ${getLanguageName(
-    language
-  )} language.`;
+  prompt += `\nEnsure the answer in ${getLanguageName(language)} language.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
