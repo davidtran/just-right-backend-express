@@ -48,6 +48,9 @@ export class Question extends Model {
   })
   detail_answer!: string;
 
+  @Column
+  hard_question!: boolean;
+
   @Column({ type: DataType.UUID })
   user_id!: string;
 

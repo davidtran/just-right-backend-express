@@ -10,7 +10,16 @@ const gemini20Flash = genAI.getGenerativeModel({
   model: "gemini-2.0-flash-001",
 });
 
-export { gemini15Flash, gemini20Flash };
+const gemini20FlashThinking = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash-thinking-exp-01-21",
+  generationConfig: {
+    temperature: 0.7,
+    topP: 0.95,
+    maxOutputTokens: 12000,
+  },
+});
+
+export { gemini15Flash, gemini20Flash, gemini20FlashThinking };
 
 export function cleanAndParseGeminiResponse(text: string): any {
   try {

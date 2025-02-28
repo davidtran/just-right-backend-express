@@ -35,6 +35,7 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
       question.math = exerciseContent.math;
       question.direct_answer = exerciseContent.direct_answer;
       question.language = exerciseContent.language;
+      question.hard_question = exerciseContent.hard_question;
     }
 
     const solution = await quickSolve(question);

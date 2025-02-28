@@ -124,6 +124,7 @@ async function handleTextUpload(
     math: questionInfo.math,
     direct_answer: questionInfo.direct_answer,
     language: userRecord.locale || questionInfo.language,
+    hard_question: questionInfo.hard_question,
   };
   const question = await Question.create({
     ...data,
