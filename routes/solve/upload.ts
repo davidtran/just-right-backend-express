@@ -12,6 +12,7 @@ import { resizeAndConvertImageToBase64 } from "../../utils/image";
 import { User } from "../../models/user";
 import {
   convertImageToTextWithGemini,
+  convertImageToTextWithOpenAI,
   parseExerciseContent,
 } from "../../utils/solve";
 import { logError } from "../../config/firebaseAdmin";
@@ -124,7 +125,6 @@ async function handleTextUpload(
     math: questionInfo.math,
     direct_answer: questionInfo.direct_answer,
     language: userRecord.locale || questionInfo.language,
-    hard_question: questionInfo.hard_question,
   };
   const question = await Question.create({
     ...data,
@@ -139,8 +139,15 @@ async function handleImageUpload(
   key: string,
   userRecord: User
 ) {
-  const base64Image = await resizeAndConvertImageToBase64(filepath, 800);
+  const base64Image = await resizeAndConvertImageToBase64(filepath, 500);
   const content = await convertImageToTextWithGemini(base64Image);
+  if (!content) {
+    throw new Error("Invalid image content");
+  }
+  const exerciseContent = await parseExerciseContent(content);
+  const math = exerciseContent.math;
+  const direct_answer = exerciseContent.direct_answer;
+  const language = userRecord.locale || exerciseContent.language;
 
   if (!content || !content.trim().length) {
     throw new Error("Invalid image content");
@@ -154,6 +161,9 @@ async function handleImageUpload(
     ...data,
     type: "photo",
     user_id: userRecord.id,
+    math,
+    direct_answer,
+    language,
   });
   return { id: question.id, content: question.content };
 }

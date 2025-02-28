@@ -29,15 +29,6 @@ router.post("/quick", authenticateUser, async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    if (question.type === "photo") {
-      const exerciseContent = await parseExerciseContent(question.question);
-      question.question = exerciseContent.content;
-      question.math = exerciseContent.math;
-      question.direct_answer = exerciseContent.direct_answer;
-      question.language = exerciseContent.language;
-      question.hard_question = exerciseContent.hard_question;
-    }
-
     const solution = await quickSolve(question);
     question.short_answer = solution;
     await question.save();

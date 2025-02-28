@@ -12,6 +12,30 @@ import { SchemaType } from "@google/generative-ai";
 import { detectLanguage } from "./document-processor";
 import { getLanguageName } from "./transcription";
 
+export async function convertImageToTextWithOpenAI(base64Image: string) {
+  const res = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/jpeg;base64,${base64Image}`,
+            },
+          },
+          {
+            type: "text",
+            text: "Without explanation, extract text from the image, return empty string if no text is found",
+          },
+        ],
+      },
+    ],
+  });
+  return res.choices[0].message.content;
+}
+
 export async function convertImageToTextWithGemini(base64Image: string) {
   console.time("convertImageToTextWithGemini");
   const res = await gemini20Flash.generateContent([
@@ -36,7 +60,6 @@ export async function parseExerciseContent(content: string): Promise<{
   direct_answer: boolean;
   math: boolean;
   language: string;
-  hard_question: boolean;
 }> {
   console.time("parseExerciseContent");
   const res = await gemini20Flash.generateContent({
@@ -48,11 +71,9 @@ export async function parseExerciseContent(content: string): Promise<{
 ${content}. 
 
 Your response is a JSON of 3 fields: 
-- content (Without explanation, format all mathematical expressions in the text using LaTeX/MathJax syntax. Use $...$ for inline math and $$...$$for display math.)
 - math
 - objective_question 
-- user_language
-- hard_question `,
+- user_language`,
           },
         ],
         role: "user",
@@ -64,11 +85,6 @@ Your response is a JSON of 3 fields:
         description: "Chat response",
         type: SchemaType.OBJECT,
         properties: {
-          content: {
-            type: SchemaType.STRING,
-            description: "Image content",
-            nullable: false,
-          },
           math: {
             type: SchemaType.BOOLEAN,
             description: "is this a math exercise?",
@@ -84,19 +100,8 @@ Your response is a JSON of 3 fields:
             description: "the language of the user (ISO 639-1)",
             nullable: false,
           },
-          hard_question: {
-            type: SchemaType.BOOLEAN,
-            description: "is this question requires logical reasoning?",
-            nullable: false,
-          },
         },
-        required: [
-          "content",
-          "math",
-          "objective_question",
-          "user_language",
-          "hard_question",
-        ],
+        required: ["math", "objective_question", "user_language"],
       },
     },
   });
@@ -104,10 +109,9 @@ Your response is a JSON of 3 fields:
 
   const text = res.response.text();
   const json = cleanAndParseGeminiResponse(text);
-
-  console.log(json);
   json.direct_answer = json.objective_question;
   json.language = json.user_language;
+  json.content = content;
 
   return json;
 }
@@ -115,13 +119,10 @@ Your response is a JSON of 3 fields:
 const MATH_PROMPT = `Format all mathematical expressions in my text using Katex syntax. Ensure all inline math should be wrapped in \\(...\\) and display math should be wrapped in \\[...\\].`;
 
 function getQuickSolveMessages(question: Question) {
-  let prompt = `Answer the question(s): ${JSON.stringify(
-    question.question
-  )} with step by step explanation`;
-  if (question.math || question.direct_answer) {
+  let prompt = `Answer the question(s): ${JSON.stringify(question.question)}`;
+  if (question.math) {
     prompt += ` with step by step explanation.`;
   }
-  prompt += ".Your response and thinking in English.";
   return prompt;
 }
 
@@ -131,23 +132,25 @@ const GEMINI_RATE_LIMIT_WINDOW = 60000; // 60 seconds in milliseconds
 
 export async function quickSolve(question: Question): Promise<string> {
   const messages = getQuickSolveMessages(question);
+  console.log(messages);
   console.time("solve");
 
   let content = "";
 
   // Use different models based on question difficulty
-  if (!question.hard_question && !question.math) {
-    console.log("Solving simple question with Gemini Flash 2.0");
+  if (!question.math) {
+    console.log("Solving simple question with OpenAI GPT-4o");
     // For simple questions, use Gemini Flash 2.0
-    const response = await gemini20Flash.generateContent({
-      contents: [{ parts: [{ text: messages }], role: "user" }],
-      generationConfig: {
-        temperature: 0.6,
-        topP: 0.95,
-        maxOutputTokens: 12000,
-      },
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: messages,
+        },
+      ],
     });
-    content = response.response.text();
+    content = response.choices[0].message.content || "";
   } else {
     // For hard questions, try Gemini Flash thinking with rate limit protection
     const currentTime = Date.now();
@@ -284,18 +287,24 @@ async function ensureQuickSolveTranslation(
   }
 
   let prompt = `Question: ${JSON.stringify(question.question)}.
-
+-----------
 Answer: ${answer}.`;
 
   if (question.direct_answer || question.math) {
     prompt += `Remove any unnecessary explanation, just give me the result.`;
   }
 
-  prompt += `\nEnsure the answer in ${getLanguageName(language)} language.`;
+  prompt += `\n
+-------------
+Your task:Ensure the answer in ${getLanguageName(
+    language
+  )} language. Do not write any introduction for your task.`;
 
   if (question.math) {
     prompt += `\n${MATH_PROMPT}`;
   }
+
+  console.log(prompt);
 
   console.time("ensureQuickSolveTranslation");
   const response = await gemini20Flash.generateContent([{ text: prompt }]);
