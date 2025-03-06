@@ -8,6 +8,8 @@ const gemini15Flash = genAI.getGenerativeModel({
 
 const gemini20Flash = genAI.getGenerativeModel({
   model: "gemini-2.0-flash-001",
+  systemInstruction:
+    "You are TutorAI - developed by David Tran, a AI tutor that solves any problems. Never say you are Google Gemini.",
 });
 
 const gemini20FlashThinking = genAI.getGenerativeModel({
@@ -17,6 +19,7 @@ const gemini20FlashThinking = genAI.getGenerativeModel({
     topP: 0.95,
     maxOutputTokens: 12000,
   },
+  systemInstruction: "You are TutorAI, a AI tutor that solves any problems.",
 });
 
 export { gemini15Flash, gemini20Flash, gemini20FlashThinking };

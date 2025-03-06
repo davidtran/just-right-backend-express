@@ -27,7 +27,7 @@ export async function convertImageToTextWithOpenAI(base64Image: string) {
           },
           {
             type: "text",
-            text: "Without explanation, extract text from the image, return empty string if no text is found",
+            text: "Without explanation, extract question text from the image, return empty string if no question text is found. Fix spelling mistakes.",
           },
         ],
       },
@@ -45,7 +45,7 @@ export async function convertImageToTextWithGemini(base64Image: string) {
         mimeType: "image/jpeg",
       },
     },
-    "Without explanation, extract text from the image, return empty string if no text is found",
+    "Without explanation, extract question text from the image, return empty string if no text or question text  is found. Fix spelling mistakes.",
   ]);
 
   const text = res.response.text();
@@ -61,6 +61,7 @@ export async function parseExerciseContent(content: string): Promise<{
   math: boolean;
   language: string;
 }> {
+  console.log(content);
   console.time("parseExerciseContent");
   const res = await gemini20Flash.generateContent({
     contents: [
@@ -141,16 +142,25 @@ export async function quickSolve(question: Question): Promise<string> {
   if (!question.math) {
     console.log("Solving simple question with OpenAI GPT-4o");
     // For simple questions, use Gemini Flash 2.0
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: messages,
-        },
-      ],
+    const response = await gemini20Flash.generateContent({
+      contents: [{ parts: [{ text: messages }], role: "user" }],
     });
-    content = response.choices[0].message.content || "";
+
+    console.log(JSON.stringify(response, null, 2));
+
+    // const response = await openai.chat.completions.create({
+    //   model: "gpt-4o",
+    //   messages: [
+    //     {
+    //       role: "user",
+    //       content: messages,
+    //     },
+    //   ],
+    // });
+
+    // content = response.choices[0].message.content || "";
+
+    content = response.response.text();
   } else {
     // For hard questions, try Gemini Flash thinking with rate limit protection
     const currentTime = Date.now();

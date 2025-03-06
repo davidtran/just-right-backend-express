@@ -104,7 +104,7 @@ async function canUploadQuestion(userRecord: User) {
         user_id: userRecord.id,
       },
     });
-    return questions < 2;
+    return questions < 1;
   }
 }
 

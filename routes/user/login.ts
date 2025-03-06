@@ -44,6 +44,11 @@ router.post(
 );
 
 async function copySampleData(userRecord: User) {
+  const notes = await Note.findAll({ where: { user_id: userRecord.id } });
+  if (notes.length) {
+    return;
+  }
+
   let sampleNote = {
     ...sampleData.note,
     id: undefined,
