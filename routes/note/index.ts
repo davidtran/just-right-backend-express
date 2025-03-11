@@ -9,6 +9,8 @@ import chat from "./chat";
 import mindmap from "./mindmap";
 import deleteNote from "./delete-note";
 import feynman from "./feynman";
+import audio from "./audio";
+
 const router = Router();
 
 router.use(list);
@@ -20,5 +22,6 @@ router.use(chat);
 router.use(mindmap);
 router.use(deleteNote);
 router.use(feynman);
+router.use(audio);
 
 export default router;

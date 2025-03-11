@@ -20,6 +20,8 @@ import bodyParser from "body-parser";
 import sequelize from "./config/database";
 import router from "./routes";
 import { User } from "./models/user";
+// Import note audio queue
+import "./queues/note-audio-queue";
 
 const app = express();
 

@@ -9,6 +9,7 @@ import { NoteMessage } from "../models/note-message";
 import NoteMindmap from "../models/note-mindmap";
 import NoteChunk from "../models/note-chunk";
 import NoteQuestion from "../models/note-question";
+import NoteAudio from "../models/note-audio";
 
 console.log(process.env.DB_NAME || "tutorai");
 
@@ -30,6 +31,7 @@ const sequelize = new Sequelize({
     NoteMindmap,
     NoteChunk,
     NoteQuestion,
+    NoteAudio,
   ],
   ssl: true,
   dialectOptions: {
