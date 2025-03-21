@@ -3,9 +3,7 @@
     {
       "name": "ProfessorAI API",
       "script": "npm",
-      "args": "start -p 6500",
-      "instances": "1",
-      "exec_mode": "cluster"
+      "args": "start -p 6500"
     }
   ]
 }
