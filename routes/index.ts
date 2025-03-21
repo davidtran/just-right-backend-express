@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import hello from "./hello";
 import question from "./question";
 import photo from "./photo";
@@ -17,6 +17,26 @@ import solve from "./solve";
 import predictLanguage from "./predict-language";
 
 const router = Router();
+
+// Health check endpoint
+router.get("/health", (req: Request, res: Response) => {
+  const memoryUsage = process.memoryUsage();
+  const uptime = process.uptime();
+
+  res.status(200).json({
+    status: "healthy",
+    uptime: `${Math.floor(uptime / 60 / 60)}h ${
+      Math.floor(uptime / 60) % 60
+    }m ${Math.floor(uptime) % 60}s`,
+    memory: {
+      rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
+      heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
+      heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
+      external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
 
 router.use(hello);
 router.use(question);

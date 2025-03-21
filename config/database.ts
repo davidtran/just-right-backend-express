@@ -36,21 +36,54 @@ const sequelize = new Sequelize({
   ssl: true,
   dialectOptions: {
     ssl: {
-      require: true, // This will help you. But you will see nwe error
-      rejectUnauthorized: false, // This line will fix new error
+      require: true,
+      rejectUnauthorized: false,
     },
+    connectTimeout: 60000,
   },
   logging: false,
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
-    acquire: 30000,
+    acquire: 60000,
     idle: 10000,
+    evict: 30000,
   },
   define: {
     timestamps: true,
     underscored: true,
   },
+  retry: {
+    max: 3,
+    match: [
+      /ETIMEDOUT/,
+      /EHOSTUNREACH/,
+      /ECONNRESET/,
+      /ECONNREFUSED/,
+      /ETIMEDOUT/,
+      /ESOCKETTIMEDOUT/,
+      /EHOSTUNREACH/,
+      /EPIPE/,
+      /EAI_AGAIN/,
+      /SequelizeConnectionError/,
+      /SequelizeConnectionRefusedError/,
+      /SequelizeHostNotFoundError/,
+      /SequelizeHostNotReachableError/,
+      /SequelizeInvalidConnectionError/,
+      /SequelizeConnectionTimedOutError/,
+    ],
+    backoffBase: 1000,
+    backoffExponent: 1.5,
+  },
 });
+
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log("Database connection established successfully.");
+  })
+  .catch((err) => {
+    console.error("Unable to connect to the database:", err);
+  });
 
 export default sequelize;

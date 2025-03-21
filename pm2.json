@@ -3,7 +3,24 @@
     {
       "name": "ProfessorAI API",
       "script": "npm",
-      "args": "start -p 6500"
+      "args": "start -p 6500",
+      "max_memory_restart": "1G",
+      "node_args": "--max-old-space-size=1024",
+      "instances": 1,
+      "exec_mode": "fork",
+      "watch": false,
+      "merge_logs": true,
+      "log_date_format": "YYYY-MM-DD HH:mm:ss",
+      "combine_logs": true,
+      "out_file": "logs/app.log",
+      "error_file": "logs/error.log",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "restart_delay": 3000,
+      "kill_timeout": 10000,
+      "wait_ready": true,
+      "listen_timeout": 50000
     }
   ]
 }

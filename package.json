@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-chunk": "ts-node scripts/test-chunk.ts",
     "extract-note": "ts-node scripts/extract-note.ts",
-    "create-note-audio-table": "ts-node scripts/create-note-audio-table.ts"
+    "create-note-audio-table": "ts-node scripts/create-note-audio-table.ts",
+    "cleanup-queues": "ts-node scripts/cleanup-queues.ts"
   },
   "author": "",
   "license": "ISC",

@@ -17,13 +17,36 @@ const noteAudioQueue = new Queue("note-audio-queue", {
       return Math.min(times * 50, 2000); // exponential backoff with max delay of 2s
     },
   },
+  isWorker: true,
+  removeOnSuccess: true, // Remove jobs after successful processing
+  removeOnFailure: true, // Remove jobs after failing (after all retries)
+
+  storeJobs: false, // Don't store job data in Redis by default
 });
 
 noteAudioQueue.on("ready", () => {
   console.log("Note audio queue is ready");
 });
 
-noteAudioQueue.process(5, async (job: any, done: any) => {
+// Add error handler for the queue
+noteAudioQueue.on("error", (err) => {
+  console.error("Note audio queue error:", err);
+});
+
+// Clean up jobs that have succeeded
+noteAudioQueue.on("succeeded", (job, result) => {
+  console.log(`Job ${job.id} succeeded with result:`, result);
+  // The job will be automatically removed due to removeOnSuccess: true
+});
+
+// Handle failed jobs
+noteAudioQueue.on("failed", (job, error) => {
+  console.error(`Job ${job.id} failed with error:`, error);
+  // The job will be automatically removed due to removeOnFailure: true
+});
+
+// Limit concurrent processing to prevent memory issues
+noteAudioQueue.process(3, async (job: any, done: any) => {
   console.log(`Processing audio job ${job.id} for note ${job.data.noteId}`);
 
   try {
@@ -42,12 +65,25 @@ noteAudioQueue.process(5, async (job: any, done: any) => {
     // Determine the language to use
     const language = note.target_language || note.source_language || "en";
 
-    // Convert markdown to speech-friendly text
-    const speechText = await convertMarkdownToSpeechText(
-      note.summary,
-      note.content,
-      language
-    );
+    // Convert markdown to speech-friendly text with a size limit
+    let speechText;
+    try {
+      speechText = await convertMarkdownToSpeechText(
+        note.summary,
+        note.content,
+        language
+      );
+
+      // Limit text size to prevent memory issues (100KB is a reasonable limit)
+      if (speechText && speechText.length > 100000) {
+        speechText =
+          speechText.substring(0, 100000) +
+          "\n\n[Content truncated due to size limits]";
+      }
+    } catch (error) {
+      console.error("Error converting markdown to speech text:", error);
+      throw new Error(`Failed to convert text: ${error}`);
+    }
 
     // Store the speech text in the note audio record
     noteAudio.audio_content = speechText;
@@ -126,11 +162,15 @@ export const createNoteAudioJob = async (
       await noteAudio.save();
     }
 
-    // Create a job in the queue
-    const job = noteAudioQueue.createJob({
-      noteId,
-      noteAudioId: noteAudio.id,
-    });
+    // Create a job in the queue with proper configuration
+    const job = noteAudioQueue
+      .createJob({
+        noteId,
+        noteAudioId: noteAudio.id,
+      })
+      .timeout(300000) // 5-minute timeout
+      .retries(2) // Maximum 2 retries
+      .backoff("exponential", 5000); // Exponential backoff starting at 5 seconds
 
     await job.save();
     console.log(`Created note audio job ${job.id} for note ${noteId}`);
