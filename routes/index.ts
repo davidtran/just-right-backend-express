@@ -12,7 +12,7 @@ import questionsList from "./questions/list";
 import feynman from "./feynman";
 import audio from "./audio";
 import upload from "./upload";
-import note from "./note";
+import noteRouter from "./note";
 import solve from "./solve";
 import predictLanguage from "./predict-language";
 
@@ -31,7 +31,7 @@ router.use(deleteQuestion);
 router.use("/feynman", feynman);
 router.use("/audio", audio);
 router.use("/upload", upload);
-router.use("/note", note);
+router.use("/note", noteRouter);
 router.use("/solve", solve);
 router.use(predictLanguage);
 

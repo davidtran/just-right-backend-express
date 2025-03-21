@@ -7,7 +7,7 @@ export const convertMarkdownToSpeechText = async (
   language: string
 ): Promise<string> => {
   try {
-    const prompt = `Without explanation, rewrite the following markdown to podcast content, you can refer to the original content for additional context, remove code block, table, elements, symbols, and other non-speech elements that are not suitable for text to speech:
+    const prompt = `Without explanation, rewrite the following markdown to podcast content, you can refer to the original content for additional context, remove code block, table, elements, symbols, and other non-speech elements that are not suitable for text to speech, keep podcast content short and follow the structure of the markdown:
 ${markdown}
 
 Original content:

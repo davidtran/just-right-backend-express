@@ -41,7 +41,7 @@ export const getAudio = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(note.summary);
+    console.log(note.summary, "---", note.content);
 
     // Check the status of the audio
     switch (noteAudio.status) {
