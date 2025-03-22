@@ -72,7 +72,7 @@ async function parseForm(
 
     const form = formidable({
       maxFiles: 1,
-      maxFileSize: 100 * 1024 * 1024, // 25MB max
+      maxFileSize: 5 * 1024 * 1024, // 25MB max
       uploadDir,
       filename: (_name, _ext, part) => {
         const filename = `${randomString()}.mp3`;

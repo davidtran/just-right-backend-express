@@ -21,7 +21,7 @@ async function fetchWebsiteContent(url: string): Promise<string> {
     const response = await axios.get(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; ProfessorAI/1.0; +http://yourwebsite.com)",
+          "Mozilla/5.0 (compatible; TutorAI/1.0; +https://tutoraistudy.com)",
       },
     });
 

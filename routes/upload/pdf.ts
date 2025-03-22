@@ -82,7 +82,7 @@ async function parseForm(
 
     const form = formidable({
       maxFiles: 1,
-      maxFileSize: 32 * 1024 * 1024, // 32MB max per file
+      maxFileSize: 10 * 1024 * 1024, // 32MB max per file
       uploadDir,
       filename: (_name, _ext, part) => {
         return `${randomString()}.pdf`;

@@ -1,11 +1,6 @@
 import { Note } from "../../models/note";
 import { uploadObject } from "../../utils/cdn";
 import {
-  fixTranscription,
-  generateNoteSummary,
-} from "../../utils/note/note-processing";
-import { generateNoteEmbedding } from "../../utils/note/note-processing";
-import {
   extractTimestamps,
   transcribeWithFirework,
 } from "../../utils/transcription";

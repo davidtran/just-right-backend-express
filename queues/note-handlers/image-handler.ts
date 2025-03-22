@@ -1,8 +1,4 @@
 import { Note } from "../../models/note";
-import {
-  generateNoteEmbedding,
-  generateNoteSummary,
-} from "../../utils/note/note-processing";
 import { uploadObject } from "../../utils/cdn";
 import { detectLanguage } from "../../utils/document-processor";
 import { extractTextFromImage } from "../../utils/document-processor";

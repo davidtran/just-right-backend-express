@@ -1,11 +1,7 @@
 import { Note } from "../../models/note";
 import { transcribeYoutube } from "../../utils/youtube/youtube-transcriptor";
 import { detectLanguage } from "../../utils/document-processor";
-import {
-  cleanAndParseGeminiResponse,
-  gemini20Flash,
-} from "../../config/gemini";
-import { SchemaType } from "@google/generative-ai";
+import { gemini20Flash } from "../../config/gemini";
 
 export async function preprocessYoutubeNote(note: Note, youtubeUrl: string) {
   const { title, text, segments } = await transcribeYoutube(youtubeUrl);
@@ -94,7 +90,6 @@ function parseTranscription(input: string): {
     return 0; // Default case
   };
 
-  // Parse segments
   const segments: ISegment[] = [];
   let currentEnd = 0;
 
@@ -106,24 +101,21 @@ function parseTranscription(input: string): {
       const text = line.replace(timestampMatch[0], "").trim();
 
       if (index > 0) {
-        // Update previous segment's end time
         segments[segments.length - 1].end = startSeconds;
       }
 
       segments.push({
         start: startSeconds,
-        end: 0, // Will be filled by next segment or calculated
+        end: 0,
         text,
       });
 
       currentEnd = startSeconds;
     } else if (segments.length > 0) {
-      // Append text to previous segment if no timestamp
       segments[segments.length - 1].text += " " + line.trim();
     }
   });
 
-  // Set end time for last segment (adding 1 second)
   if (segments.length > 0) {
     segments[segments.length - 1].end = segments[segments.length - 1].start + 1;
   }

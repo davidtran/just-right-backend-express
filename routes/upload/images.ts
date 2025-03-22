@@ -86,7 +86,7 @@ async function parseForm(
 
     const form = formidable({
       maxFiles: 10,
-      maxFileSize: 10 * 1024 * 1024, // 10MB max per file
+      maxFileSize: 4 * 1024 * 1024, // 10MB max per file
       uploadDir,
       filename: (_name, _ext, part) => {
         const ext = part.mimetype?.split("/")[1] || "jpg";
